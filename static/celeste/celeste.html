@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  	<title>celeste</title>
+	<meta name="description" content=""/>
+	<meta name="keywords" content=""/>
+    <link type="text/css" rel="stylesheet" href="/static/css/main.css" />
+    <script type="text/javascript" src="/static/js/jquery.notmin.js"></script>
+    <script type="text/javascript" src="/static/js/util.js"></script>
+    <script type="text/javascript" src="/static/js/objects.js"></script>
+    <script type="text/javascript" src="/static/js/astro.js"></script>
+    <script type="text/javascript" src="/static/js/celeste.js"></script>
+<script type="text/javascript">	
+	$(function(){//onReady
+		_viewer = new Viewer(new Canvas($('#canvas')[0]));
+		if ($.param('al') != '') _viewer.al = parseFloat($.param('al'));
+		if ($.param('az') != '') _viewer.az = parseFloat($.param('az')); 
+		if ($.param('d') != '') _viewer.d = parseFloat($.param('d')); 
+		_keyboard = new Keyboard(_viewer);
+		_viewer.notifyListeners();
+		$(document).keydown(function(e){
+			_keyboard.keyChange(e, true);
+			if (debug){
+				_keyboard.keyboardResponse();
+			}
+		}).keyup(function(e){
+			_keyboard.keyChange(e, false);
+		});
+		if (!debug){
+			setInterval(keyboardListener, 35);
+		}
+		drawSunMap();
+	});
+	function keyboardListener(){
+		_keyboard.keyboardResponse();
+	}
+	function drawSunMap(hour){
+		var canvas = $('#sun-map')[0];
+		var context = canvas.getContext('2d');
+		var gran = 90;
+		var date = new Date();
+		$('#time').text(date.toTimeString());
+
+		context.fillStyle = "#fff";
+		context.fillRect(0,0,360,180);
+		if (typeof(hour) != 'undefined') {
+			date.setUTCHours(hour);
+		}
+		for (var i = 0; i <= gran; i++){
+			for (var j = 0; j <= gran; j++){
+				var lat = 90 - (i * 180 / gran);
+				var lon = -180 + (j * 360 / gran);
+				var isLight = astro.getAltitudeOfSun(date, lat, lon) > 0;
+				if (!isLight){
+					context.fillStyle = "#009";
+					context.fillRect(4*j,2*i,4, 2);
+				}
+			}
+		}	
+	}
+	function benchmark(fast){
+		$.log('beginning benchmark', true); 
+		var vec = new Vector(1,2,3);
+		var numTrials = 0;
+		var totalTime = 0;
+		for (var i = 0; i < 10; i++){
+			var begin = (new Date()).getTime();
+			for (var phi = 0; phi < 2*Math.PI; phi+= 0.01){
+				for (var theta = 0; theta < Math.PI/2; theta+=0.01){
+					vec = fast ? vec.rotateFast(phi, theta) : vec = vec.rotateZ(phi).rotateY(theta);
+				}
+			}
+			var time  =  (new Date()).getTime() - begin;
+			$.log("completed test in " + time + "ms", true);
+			totalTime += time;
+			numTrials++;
+		}
+		$.log('avg time = ' + (totalTime/numTrials), true);
+	}
+</script>
+</head>
+<body>
+<div>
+	<div id="canvas-container">
+		<canvas id="canvas" width="800" height="500"></canvas>
+	</div>
+	<div id="model-container">
+		<div id="time"></div>
+		<canvas id="sun-map" width="360" height="180"></canvas>
+		<div>
+			az = <span id="model_v_az"></span><br>
+			al = <span id="model_v_al"></span><br>
+			dist = <span id="model_s_d"></span><br>
+		</div>
+	</div>
+	<div style="clear: both">
+	</div>
+</div>	
+ </body>
+</html>
