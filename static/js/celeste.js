@@ -134,21 +134,12 @@ Screen = function(viewer, canvas){
 	}
 	
 	this.drawCompass = function(){
-		this.drawCompoundObject(this.compass);
-		this.drawCompoundObject(this.altitudeCircles);
+		this.drawObject(this.compass);
+		this.drawObject(this.altitudeCircles);
 	}
 	
 	this.drawAllObjects = function(){
-		this.drawCompoundObject(this.sunPath);
-	}
-	
-	this.drawCompoundObject = function(compoundObject){
-		for (var i = 0; i < compoundObject.objects.length; i++){
-			this.drawObject(compoundObject.objects[i]);
-		}
-		if (compoundObject.hasCaptions()){
-			this.drawCaptionSet(compoundObject.captions);
-		}
+		this.drawObject(this.sunPath);
 	}
 	
 	this.drawObject = function(o){
@@ -156,9 +147,17 @@ Screen = function(viewer, canvas){
 			this.drawPolygon(o);
 		} else if (o.type == 'line'){
 			this.drawLine(o);
-		} else if (o.type == 'pointset'){
-			this.drawPointSet(o);
-		} 
+		} else if (o.type == 'point'){
+			this.drawPoint(o);
+		}
+		if (o.hasCaptions()){
+			this.drawCaptionSet(o.captions);
+		}
+		if (o.hasChildren()){
+			for (var i = 0; i < o.children.length; i++){
+				this.drawObject(o.children[i]);
+			}
+		}
 	}
 	
 	this.drawPolygon = function(o){
@@ -235,18 +234,14 @@ Screen = function(viewer, canvas){
 		this.canvas.drawLine(pLine, l.properties.strokeStyle, l.properties.lineWidth);
 	}
 	
-	this.drawPointSet = function(p){
-		var coords3dAug = this.getRotatedCoordsNotBehindViewer(
-				p.getVectors(), p.type);
-		var pointSet = new ProjectedPointSet(this);
-		var x;
-		for (var i = 0; i < coords3dAug.length; i++){
-			x = coords3dAug[i];
-			if (this.isInVisibilityCone(x)){
-				pointSet.addCoord(this.getProjection(x));
-			}
+	this.drawPoint = function(p){
+		var x = this.getRotatedCoordsNotBehindViewer(
+				p.getVectors(), p.type)[0];
+		if (x && this.isInVisibilityCone(x)){
+			var point = new ProjectedPoint(this);
+			point.addCoord(this.getProjection(x));
+			this.canvas.drawPoint(point.getCoord(), p.properties.radius, p.properties.pointStyle);
 		}
-		this.canvas.drawPointSet(pointSet, p.properties.radius, p.properties.pointStyle);
 	}
 	
 	this.drawCaptionSet = function(captions){
@@ -499,19 +494,19 @@ ProjectedLine = function(screen){
 	}
 }
 
-ProjectedPointSet = function(screen){
+ProjectedPoint = function(screen){
 	this.screen = screen;
 	
-	this.normCoords = new Array();
+	this.normCoord = new Array();
 	
 	this.addCoord = function(coord){
 		var normCoord = new Coordinate(
 				(coord.x + this.screen.w/2)/this.screen.w,
 				(coord.y + this.screen.h/2)/this.screen.h);
-		this.normCoords.push(normCoord);
+		this.normCoord = normCoord;
 	}
-	this.getCoords = function(){
-		return this.normCoords;
+	this.getCoord = function(){
+		return this.normCoord;
 	}
 }
 
@@ -563,13 +558,6 @@ Canvas = function(canvasObject){
 			this.context.closePath();
 			this.context.fill();
 		}		
-	}
-	
-	this.drawPointSet = function(pointSet, r, style){
-		var coords = pointSet.getCoords();
-		for (var i = 0; i < coords.length; i++){ 
-			this.drawPoint(coords[i], r, style);
-		}
 	}
 	
 	this.drawCaptionSet = function(captionSet){
@@ -656,9 +644,7 @@ Canvas = function(canvasObject){
 		}
 	}
 }
-
-Object = function(points, type, properties){
-	this.points = points;
+Object = function(type, properties){
 	this.type = type;
 	this.properties = {
 		fillStyle : 'rgb(100,100,100)',
@@ -668,13 +654,34 @@ Object = function(points, type, properties){
 	for (key in properties){
 		this.properties[key] = properties[key];
 	}
-	
+
+	this.points = new Array();
+	this.captions = new Array();
+	this.children = new Array();
+	this.addPoints = function(pointsToAdd){
+		this.points = this.points.concat(pointsToAdd);
+		return this;
+	}
+	this.addCaptions = function(captionsToAdd){
+		this.captions = this.captions.concat(captionsToAdd);
+		return this;
+	}
+	this.addChildren = function(childrenToAdd){
+		this.children = this.children.concat(childrenToAdd);
+		return this;
+	}
 	this.getVectors = function(){
 		var vectors = new Array();
 		for (var i = 0; i < this.points.length; i++){
 			vectors.push(this.points[i].toVector());
 		}
 		return vectors;
+	}
+	this.hasCaptions = function(){
+		return this.captions.length > 0;
+	}
+	this.hasChildren = function(){
+		return this.children.length > 0;
 	}
 };
 
@@ -687,14 +694,6 @@ Caption = function(text, point, style, font){
 		return this.point.toVector();
 	}
 }
-
-CompoundObject = function(objects, captions){
-	this.objects = objects;
-	this.captions = captions;
-	this.hasCaptions = function(){
-		return typeof(this.captions)!="undefined";
-	}
-};
 
 Angle = function(az, al){
 	this.az = az;
@@ -737,10 +736,10 @@ Vector = function(x,y,z){
 		var cosPhi = Math.cos(phi);
 		var sinTheta = Math.sin(theta);
 		var cosTheta = Math.cos(theta);
-		var v2 = new Vector((this.x * cosPhi + this.y * sinPhi) * cosTheta + this.z * sinTheta, 
+		return new Vector(
+				(this.x * cosPhi + this.y * sinPhi) * cosTheta + this.z * sinTheta, 
 				this.y * cosPhi - this.x * sinPhi,
 				this.z * cosTheta - (this.x * cosPhi + this.y * sinPhi) * sinTheta);
-		return v2;
 	}
 	this.rotateX = function(theta){
 		return new Vector(this.x, 

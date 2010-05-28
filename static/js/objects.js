@@ -15,82 +15,103 @@ ObjectHolder = function(){
 	}
 }
 ObjectFactory = {
+	polygon : function(fillStyle, opts){
+		if (typeof opts == 'undefined') opts = {};
+		opts['fillStyle'] = fillStyle;
+		return new Object('polygon', opts);
+	},
+	line : function(strokeStyle, lineWidth, opts){
+		if (typeof opts == 'undefined') opts = {};
+		opts['strokeStyle'] = strokeStyle;
+		opts['lineWidth'] = lineWidth;	
+		return new Object('line', opts);
+	},
+	point : function(pointStyle, radius, opts){
+		if (typeof opts == 'undefined') opts = {};
+		opts['radius'] = radius;
+		opts['pointStyle'] = pointStyle;
+		return new Object('point', opts);
+	},
+	empty : function(opts){
+		if (typeof opts == 'undefined') opts = {};
+		return new Object('empty', opts);
+	},
 	createEarth : function(){
+		var earth = ObjectFactory.polygon('#647f38');
 		var pi = Math.PI;
-		var angles = new Array();
 		var sample = 6;
 		for (var i = 0; i < sample; i++){
-			angles.push(new Angle(2*pi*(i/sample), -1 * Math.acos(3950/(3950 + 6/5280))));
+			earth.addPoints([new Angle(2*pi*(i/sample), -1 * Math.acos(3950/(3950 + 6/5280)))]);
 		}
-		return new Object(angles, 'polygon', {fillStyle:'#647f38'});
+		return earth;
 	},
 	createAltitudeCircles : function(){
-		var objects = new Array();
+		var circles = ObjectFactory.empty();
 		var pi = Math.PI;
 		var angles = new Array();
 		var sample = 50;
 		for (var j = 1; j <= 8; j++){
-			angles = new Array();
+			var c = ObjectFactory.line(debug ? "#fff" : "rgba(255,255,255,0.6)", 4);
 			for (var i = 0; i <= sample; i++){
-				angles.push(new Angle(2*pi*(i/sample), pi*j/18));
+				c.addPoints([new Angle(2*pi*(i/sample), pi*j/18)]);
 			}
-			objects.push(new Object(angles, 'line', {strokeStyle: debug ? "#fff" : "rgba(255,255,255,0.6)", lineWidth:4}));
+			circles.addChildren([c]);
 		}
-		return new CompoundObject(objects);
+		return circles;
 	},
 	createSunPath : function(){
+		var sunPath = ObjectFactory.line(debug ? "#ff0" : "rgba(255,255,0,0.6)", 4);
 		var lat = 43.005134,lon = -78.87400442, date = new Date();
-		var objects = new Array();
-		var angles = new Array();
-		var captions = new Array();
 		var az = degToRad(astro.getAzimuthOfSun(date, lat, lon));
 		var al = degToRad(astro.getAltitudeOfSun(date, lat, lon));
-		objects.push(new Object([new Angle(az, al)], 'pointset', {pointStyle: "rgba(255,255,0,1)", radius:28}));
 
+		var sun = ObjectFactory.point("rgba(255,255,0,1)", 28)
+							   .addPoints([new Angle(az, al)]);
+		sunPath.addChildren([sun]);
+		
 		date.setMinutes(0);
 		date.setSeconds(0,0);
 		for (var hour = 0; hour <= 24; hour++){
 			date.setHours(hour);
-			var az = degToRad(astro.getAzimuthOfSun(date, lat, lon));
-			var al = degToRad(astro.getAltitudeOfSun(date, lat, lon));
-			angles.push(new Angle(az, al));
+			az = degToRad(astro.getAzimuthOfSun(date, lat, lon));
+			al = degToRad(astro.getAltitudeOfSun(date, lat, lon));
+			sunPath.addPoints(new Angle(az, al));
 			var hourString = (hour >= 10 ? '' : '0') + hour + '00';
-			hour != 24 && captions.push(new Caption(hourString, new Angle(az, al), "#000", 'arial 18px bold'));
+			hour != 24 && sunPath.addCaptions(new Caption(hourString, new Angle(az, al), "#000", 'arial 18px bold'));
 		}
-		objects.push(new Object(angles, 'line', {strokeStyle: debug ? "#ff0" : "rgba(255,255,0,0.6)", lineWidth:4}))
-		return new CompoundObject(objects, captions);
+		return sunPath;
 	},
 	createCompass : function(){
 		var pi = Math.PI;
 		var h = -100 * Math.acos(3950/(3950 + 6/5280));
-		var vectors;
-		var objects = new Array();
 		var fill = debug ? "#ff0" : "rgba(255,255,255,0.8)";
 		var stroke = debug ? "#ff0" : "rgba(255,255,255,0.8)";
 		var font = '18px arial';
-		vectors = [new Vector(100,-0.2,h),new Vector(100,0.2,h),new Vector(0.5,0.5,-5),new Vector(0.5,-0.5,-5)]; 
-		objects.push(new Object(vectors, 'polygon', {fillStyle : fill}));
-		
-		vectors = [new Vector(-0.2,-100,h),new Vector(0.2,-100,h),new Vector(0.5,-0.5,-5),new Vector(-0.5,-0.5,-5)]; 
-		objects.push(new Object(vectors, 'polygon', {fillStyle : fill}));
-		
-		vectors = [new Vector(-100,-0.2,h),new Vector(-100,0.2,h),new Vector(-0.5,0.5,-5),new Vector(-0.5,-0.5,-5)]; 
-		objects.push(new Object(vectors, 'polygon', {fillStyle : fill}));
-		
-		vectors = [new Vector(-0.2,100,h),new Vector(0.2,100,h),new Vector(0.5,0.5,-5),new Vector(-0.5,0.5,-5)]; 
-		objects.push(new Object(vectors, 'polygon', {fillStyle : fill}));
-		
-		vectors = [new Vector(100,0,h),new Vector(0,0,100),new Vector(-100,0,h)];
-		objects.push(new Object(vectors,'line',{strokeStyle: stroke, lineWidth:4}));
 
-		vectors = [new Vector(0,100,h),new Vector(0,0,100),new Vector(0,-100,h)];
-		objects.push(new Object(vectors,'line',{strokeStyle: stroke, lineWidth:4}));
-		
-		var captions = [new Caption("N", new Vector(100, 0, 0), fill, font),
+		var compass = ObjectFactory.empty()
+				.addChildren([
+					ObjectFactory.polygon(fill)
+						.addPoints([new Vector(100,-0.2,h),new Vector(100,0.2,h),
+						            new Vector(0.5,0.5,-5),new Vector(0.5,-0.5,-5)]),
+					ObjectFactory.polygon(fill)
+						.addPoints([new Vector(-0.2,-100,h),new Vector(0.2,-100,h),
+						            new Vector(0.5,-0.5,-5),new Vector(-0.5,-0.5,-5)]),
+					ObjectFactory.polygon(fill)
+						.addPoints([new Vector(-100,-0.2,h),new Vector(-100,0.2,h),
+						            new Vector(-0.5,0.5,-5),new Vector(-0.5,-0.5,-5)]),
+					ObjectFactory.polygon(fill)
+						.addPoints([new Vector(-0.2,100,h),new Vector(0.2,100,h),
+						            new Vector(0.5,0.5,-5),new Vector(-0.5,0.5,-5)]),
+			    	ObjectFactory.line(stroke, 4)
+						.addPoints([new Vector(100,0,h),new Vector(0,0,100),new Vector(-100,0,h)]),
+					ObjectFactory.line(stroke, 4)
+						.addPoints([new Vector(0,100,h),new Vector(0,0,100),new Vector(0,-100,h)])					            
+				])
+				.addCaptions([new Caption("N", new Vector(100, 0, 0), fill, font),
 		                new Caption("E", new Vector(0, 100, 0), fill, font),
 		                new Caption("S", new Vector(-100, 0, 0), fill, font),
-		                new Caption("W", new Vector(0, -100, 0), fill, font)];
+		                new Caption("W", new Vector(0, -100, 0), fill, font)]);
 		
-		return new CompoundObject(objects, captions);
+		return compass;
 	}
 }
