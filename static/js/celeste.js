@@ -52,8 +52,9 @@ Keyboard = function(viewer){
 }
 
 Viewer = function(canvas){
-	this.lat = 0;
-	this.lon = 0;
+	this.date = new Date();
+	this.lat = 43.005134;
+	this.lon = -78.87400442;
 	this.alt = 0;
 	this.az = 0;
 	this.al = 0;
@@ -113,7 +114,7 @@ Screen = function(viewer, canvas){
 	this.earth = ObjectFactory.createEarth();
 	this.compass = ObjectFactory.createCompass();
 	this.altitudeCircles = ObjectFactory.createAltitudeCircles();
-	this.sunPath = ObjectFactory.createSunPath();
+	this.sunPath = ObjectFactory.createSunPath(viewer.date, viewer.lat, viewer.lon);
 	
 	this.update = function(){
 		this.canvas.clear();
@@ -150,13 +151,13 @@ Screen = function(viewer, canvas){
 		} else if (o.type == 'point'){
 			this.drawPoint(o);
 		}
-		if (o.hasCaptions()){
-			this.drawCaptionSet(o.captions);
-		}
 		if (o.hasChildren()){
 			for (var i = 0; i < o.children.length; i++){
 				this.drawObject(o.children[i]);
 			}
+		}
+		if (o.hasCaptions()){
+			this.drawCaptionSet(o.captions);
 		}
 	}
 	
@@ -198,7 +199,7 @@ Screen = function(viewer, canvas){
 					var exit = this.getProjection(intersections[0]);
 					pObj.addCoordOnBoundary(exit);
 				}
-				var theta = MathExt.getAngle(new Coordinate(x.y, x.z));
+				var theta = MathExt.getAngle(new Coordinate(-1 * x.y, x.z));
 				pObj.addCoordOutside(theta);
 			}
 		}
@@ -288,14 +289,14 @@ Screen = function(viewer, canvas){
 	this.rotateCoords = function(coords){
 		var rCoords = new Array();
 		for (var i = 0; i < coords.length; i++){
-//			rCoords.push(coords[i].rotateZ(this.viewer.az).rotateY(this.viewer.al).rotateX(this.viewer.ro));
-			rCoords.push(coords[i].rotateFast(this.viewer.az, this.viewer.al));
+//			rCoords.push(coords[i].rotateZ(-1*this.viewer.az).rotateY(this.viewer.al).rotateX(this.viewer.ro));
+			rCoords.push(coords[i].rotateFast(-1*this.viewer.az, this.viewer.al));
 		}
 		return rCoords;
 	}
 	
 	this.getProjection = function(x){
-		return new Coordinate(x.y * this.viewer.d / x.x, x.z * this.viewer.d / x.x);
+		return new Coordinate(-1 * x.y * this.viewer.d / x.x, x.z * this.viewer.d / x.x);
 	}
 	
 	/**
@@ -439,7 +440,7 @@ ProjectedObject = function(screen){
 		if (this.isOutside){
 			if (this.lastBoundaryPoint == null){
 				//never crossed from inside to out
-				if (this.dTheta >= Math.PI){
+				if (Math.abs(this.dTheta) >= Math.PI){
 					//object takes up whole screen
 					this.fillInBetweenAngles(0, Math.PI, true);
 					this.fillInBetweenAngles(Math.PI, 0, true);
@@ -695,7 +696,7 @@ Caption = function(text, point, style, font){
 	}
 }
 
-Angle = function(az, al){
+HorizontalCoord = function(az, al){
 	this.az = az;
 	this.al = al;
 	this.toVector = function(){
@@ -703,6 +704,9 @@ Angle = function(az, al){
 				Math.cos(this.az) * Math.cos(this.al),
 				-1 * Math.sin(this.az) * Math.cos(this.al),
 				Math.sin(this.al));
+	}
+	this.toString = function(){
+		return '(' + this.az + ',' + this.al + ')';
 	}
 }
 
@@ -754,8 +758,8 @@ Vector = function(x,y,z){
 	}
 
 	this.rotateZ = function(theta){
-		return new Vector(this.x * Math.cos(theta) + this.y * Math.sin(theta), 
-				this.y * Math.cos(theta) - this.x * Math.sin(theta),
+		return new Vector(this.x * Math.cos(theta) - this.y * Math.sin(theta), 
+				this.y * Math.cos(theta) + this.x * Math.sin(theta),
 				this.z);
 	}
 }

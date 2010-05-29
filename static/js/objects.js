@@ -41,7 +41,7 @@ ObjectFactory = {
 		var pi = Math.PI;
 		var sample = 6;
 		for (var i = 0; i < sample; i++){
-			earth.addPoints([new Angle(2*pi*(i/sample), -1 * Math.acos(3950/(3950 + 6/5280)))]);
+			earth.addPoints([new HorizontalCoord(2*pi*(i/sample), -1 * Math.acos(3950/(3950 + 6/5280)))]);
 		}
 		return earth;
 	},
@@ -53,31 +53,29 @@ ObjectFactory = {
 		for (var j = 1; j <= 8; j++){
 			var c = ObjectFactory.line(debug ? "#fff" : "rgba(255,255,255,0.6)", 4);
 			for (var i = 0; i <= sample; i++){
-				c.addPoints([new Angle(2*pi*(i/sample), pi*j/18)]);
+				c.addPoints([new HorizontalCoord(2*pi*(i/sample), pi*j/18)]);
 			}
 			circles.addChildren([c]);
 		}
 		return circles;
 	},
-	createSunPath : function(){
+	createSunPath : function(date, lat, lon){
 		var sunPath = ObjectFactory.line(debug ? "#ff0" : "rgba(255,255,0,0.6)", 4);
-		var lat = 43.005134,lon = -78.87400442, date = new Date();
-		var az = degToRad(astro.getAzimuthOfSun(date, lat, lon));
-		var al = degToRad(astro.getAltitudeOfSun(date, lat, lon));
 
-		var sun = ObjectFactory.point("rgba(255,255,0,1)", 28)
-							   .addPoints([new Angle(az, al)]);
-		sunPath.addChildren([sun]);
+		var frame = new FrameOfReference(date, lat, lon);
+		var hCoord = frame.getHorizontalFromEquatorial(astro.getSun(date));
+
+		sunPath.addChildren(ObjectFactory.point("rgba(255,255,0,1)", 28)
+				   .addPoints(hCoord));
 		
-		date.setMinutes(0);
-		date.setSeconds(0,0);
+		frame.date.setMinutes(0);
+		frame.date.setSeconds(0,0);
 		for (var hour = 0; hour <= 24; hour++){
-			date.setHours(hour);
-			az = degToRad(astro.getAzimuthOfSun(date, lat, lon));
-			al = degToRad(astro.getAltitudeOfSun(date, lat, lon));
-			sunPath.addPoints(new Angle(az, al));
+			frame.date.setHours(hour);
+			hCoord = frame.getHorizontalFromEquatorial(astro.getSun(date));
+			sunPath.addPoints(hCoord);
 			var hourString = (hour >= 10 ? '' : '0') + hour + '00';
-			hour != 24 && sunPath.addCaptions(new Caption(hourString, new Angle(az, al), "#000", 'arial 18px bold'));
+			hour != 24 && sunPath.addCaptions(new Caption(hourString, hCoord, "#000", 'arial 18px bold'));
 		}
 		return sunPath;
 	},
@@ -108,9 +106,9 @@ ObjectFactory = {
 						.addPoints([new Vector(0,100,h),new Vector(0,0,100),new Vector(0,-100,h)])					            
 				])
 				.addCaptions([new Caption("N", new Vector(100, 0, 0), fill, font),
-		                new Caption("E", new Vector(0, 100, 0), fill, font),
+		                new Caption("E", new Vector(0, -100, 0), fill, font),
 		                new Caption("S", new Vector(-100, 0, 0), fill, font),
-		                new Caption("W", new Vector(0, -100, 0), fill, font)]);
+		                new Caption("W", new Vector(0, 100, 0), fill, font)]);
 		
 		return compass;
 	}

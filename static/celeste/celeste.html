@@ -47,11 +47,12 @@
 		if (typeof(hour) != 'undefined') {
 			date.setUTCHours(hour);
 		}
+		var frame = new FrameOfReference(date, 0, 0);
 		for (var i = 0; i <= gran; i++){
 			for (var j = 0; j <= gran; j++){
-				var lat = 90 - (i * 180 / gran);
-				var lon = -180 + (j * 360 / gran);
-				var isLight = astro.getAltitudeOfSun(date, lat, lon) > 0;
+				frame.lat = 90 - (i * 180 / gran);
+				frame.lon = -180 + (j * 360 / gran);
+				var isLight = frame.getHorizontalFromEquatorial(astro.getSun(date)).al > 0;
 				if (!isLight){
 					context.fillStyle = "#009";
 					context.fillRect(4*j,2*i,4, 2);
