@@ -51,7 +51,7 @@ Keyboard = function(viewer){
 	};
 }
 
-Viewer = function(canvas){
+Viewer = function(canvas, sunMap){
 	this.date = new Date();
 	this.lat = 43.005134;
 	this.lon = -78.87400442;
@@ -62,6 +62,7 @@ Viewer = function(canvas){
 	this.d = 10;
 	
 	this.screen = new Screen(this, canvas);
+	this.sunMap = sunMap;
 	
 	this.notifyListeners = function(){
 		$('#model_v_az').text(this.az);
@@ -69,6 +70,10 @@ Viewer = function(canvas){
 		$('#model_s_d').text(this.d);
 		window.location.hash='az='+this.az + '&al='+this.al + '&d=' + this.d;
 		this.screen.update();
+	}
+	this.notifyFrameOfReferenceListeners = function(){
+		this.sunMap.draw(this.date, new GeographicCoord(this.lat, this.lon));
+		this.notifyListeners();
 	}
 	this.changeAl = function(delta){
 		var newAl = this.al + delta; 
@@ -91,6 +96,15 @@ Viewer = function(canvas){
 			this.d = newDist;
 			this.notifyListeners();
 		}
+	}
+	this.setDate = function(date){
+		this.date = date;
+		this.notifyFrameOfReferenceListeners();
+	}
+	this.setLocation = function(geoCoord){
+		this.lat = geoCoord.lat;
+		this.lon = geoCoord.lon;
+		this.notifyFrameOfReferenceListeners();
 	}
 	this.reset = function(){
 		this.az = 0;
@@ -761,5 +775,40 @@ Vector = function(x,y,z){
 		return new Vector(this.x * Math.cos(theta) - this.y * Math.sin(theta), 
 				this.y * Math.cos(theta) + this.x * Math.sin(theta),
 				this.z);
+	}
+}
+
+SunMap = function(canvas){
+	this.context = canvas.getContext('2d');
+	this.draw = function(date, coord){
+		var coordOfSun = astro.getGeographicCoordOfSun(date);
+		var cLat = degToRad(coordOfSun.lat);
+		var cLon = degToRad(coordOfSun.lon);
+		//draw shadow of darkness
+		var above = this.getEdgeOfBrightness(cLon, cLat, cLon) > cLat;
+		this.context.fillStyle = "rgba(0,0,40,0.3)";
+		this.context.moveTo(360, above ? 0 : 180);
+		this.context.lineTo(  0, above ? 0 : 180);
+		for (var i = 0; i <= 360; i++){
+			var lon = Math.PI * (i - 180) / 180;
+			var lat = this.getEdgeOfBrightness(lon, cLat, cLon);
+			var j = 180 * ((Math.PI/2 - lat)/ Math.PI);
+			this.context.lineTo(i, j);
+		}
+		this.context.fill();
+		this.drawCoord(coord);
+	}
+	this.drawCoord = function(coord){
+		this.context.fillStyle = "#f00";
+		this.context.beginPath();
+		var p = new Pixel(180 + coord.lon, 90 - coord.lat);
+		this.context.arc(p.x, p.y, 2, 0, Math.PI*2, true);
+		this.context.closePath();
+		this.context.fill();
+	}
+	this.getEdgeOfBrightness = function(lon, theta, phi){ 
+		if (Math.cos(lon - phi) == 0) return 0;
+		return -1 * MathExt.sgn(Math.sin(theta) * Math.cos(lon - phi)) * Math.asin(Math.cos(theta) / 
+					 Math.sqrt(1 + Math.pow(Math.tan(lon - phi) * Math.sin(theta), 2)));
 	}
 }

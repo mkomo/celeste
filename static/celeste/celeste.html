@@ -13,12 +13,14 @@
     <script type="text/javascript" src="/static/js/celeste.js"></script>
 <script type="text/javascript">	
 	$(function(){//onReady
-		_viewer = new Viewer(new Canvas($('#canvas')[0]));
+		var pane = new Canvas($('#canvas')[0]);
+		var sunMap = new SunMap($('#sun-map')[0]);
+		_viewer = new Viewer(pane, sunMap);
 		if ($.param('al') != '') _viewer.al = parseFloat($.param('al'));
 		if ($.param('az') != '') _viewer.az = parseFloat($.param('az')); 
 		if ($.param('d') != '') _viewer.d = parseFloat($.param('d')); 
 		_keyboard = new Keyboard(_viewer);
-		_viewer.notifyListeners();
+		_viewer.notifyFrameOfReferenceListeners();
 		$(document).keydown(function(e){
 			_keyboard.keyChange(e, true);
 			if (debug){
@@ -30,67 +32,9 @@
 		if (!debug){
 			setInterval(keyboardListener, 35);
 		}
-		drawSunMap(new Date());
 	});
 	function keyboardListener(){
 		_keyboard.keyboardResponse();
-	}
-	function drawSunMap(date){
-		var canvas = $('#sun-map')[0];
-		var context = canvas.getContext('2d');
-		
-		var coord = astro.getGeographicCoordOfSun(date);
-		var cLat = degToRad(coord.lat);
-		var cLon = degToRad(coord.lon);
-		//draw equator
-		context.clearRect(0,0,360,180);
-		context.strokeStyle = "rgba(0,0,40,0.5)";
-		context.moveTo(0, 90);
-		context.lineTo(360, 90);
-		context.stroke();
-		//draw shadow of darkness
-		var above = getEdgeOfBrightness(cLon, cLat, cLon) > cLat;
-		context.fillStyle = "rgba(0,0,40,0.3)";
-		context.moveTo(360, above ? 0 : 180);
-		context.lineTo(  0, above ? 0 : 180);
-		for (var i = 0; i <= 360; i++){
-			var lon = Math.PI * (i - 180) / 180;
-			var lat = getEdgeOfBrightness(lon, cLat, cLon);
-			var j = 180 * ((Math.PI/2 - lat)/ Math.PI);
-			context.lineTo(i, j);
-		}
-		context.fill();
-
-		context.fillStyle = "#ff0";
-		context.strokeStyle = '#ff0';
-		context.beginPath();
-		context.arc(180 + coord.lon, 90 - coord.lat / Math.PI, 2, 0, Math.PI*2, true);
-		context.closePath();
-		context.fill();
-	}
-	function getEdgeOfBrightness(lon, theta, phi){ 
-		if (Math.cos(lon - phi) == 0) return 0;
-		return -1 * MathExt.sgn(Math.sin(theta) * Math.cos(lon - phi)) * Math.asin(Math.cos(theta) / 
-					 Math.sqrt(1 + Math.pow(Math.tan(lon - phi) * Math.sin(theta), 2)));
-	}
-	function benchmark(fast){
-		$.log('beginning benchmark', true); 
-		var vec = new Vector(1,2,3);
-		var numTrials = 0;
-		var totalTime = 0;
-		for (var i = 0; i < 10; i++){
-			var begin = (new Date()).getTime();
-			for (var phi = 0; phi < 2*Math.PI; phi+= 0.01){
-				for (var theta = 0; theta < Math.PI/2; theta+=0.01){
-					vec = fast ? vec.rotateFast(phi, theta) : vec = vec.rotateZ(phi).rotateY(theta);
-				}
-			}
-			var time  =  (new Date()).getTime() - begin;
-			$.log("completed test in " + time + "ms", true);
-			totalTime += time;
-			numTrials++;
-		}
-		$.log('avg time = ' + (totalTime/numTrials), true);
 	}
 </script>
 </head>
