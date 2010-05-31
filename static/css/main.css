@@ -6,4 +6,9 @@
 }
 #model-container{
 	float: left;
+	margin-left: 4px;
+}
+#sun-map{
+	border: 1px solid #88F;
+	background: url("/static/img/sun-map.png")
 }
