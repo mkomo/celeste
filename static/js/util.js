@@ -28,9 +28,18 @@ MathExt = {
 		return MathExt.translateAngle(angle, 0);
 	},
 	translateAngle : function(angle, angleMin){
-		var diff = angle - angleMin;
-		diff = diff - Math.floor(diff/(2*Math.PI))*2*Math.PI;
-		return angleMin + diff;
+		return MathExt.translatePeriodic(angle, angleMin, angleMin + 2*Math.PI);
+	},
+	translatePeriodic : function(val, min, max){
+		var period = max - min;
+		var diff = val - min;
+		diff = diff - Math.floor(diff/period)*period;
+		return min + diff;
+	},
+	sgn : function(val){
+		if (val < 0) return -1;
+		if (val > 0) return 1;
+		return 0;
 	},
 	isAngleBetween : function(theta, theta_min, theta_max){
 		if (theta_min == theta_max){
