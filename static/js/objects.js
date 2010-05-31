@@ -72,7 +72,7 @@ ObjectFactory = {
 		frame.date.setSeconds(0,0);
 		for (var hour = 0; hour <= 24; hour++){
 			frame.date.setHours(hour);
-			hCoord = frame.getHorizontalFromEquatorial(astro.getSun(date));
+			hCoord = frame.getHorizontalFromEquatorial(astro.getSun(frame.date));
 			sunPath.addPoints(hCoord);
 			var hourString = (hour >= 10 ? '' : '0') + hour + '00';
 			hour != 24 && sunPath.addCaptions(new Caption(hourString, hCoord, "#000", 'arial 18px bold'));
