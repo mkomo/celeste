@@ -30,35 +30,48 @@
 		if (!debug){
 			setInterval(keyboardListener, 35);
 		}
-		drawSunMap();
+		drawSunMap(new Date());
 	});
 	function keyboardListener(){
 		_keyboard.keyboardResponse();
 	}
-	function drawSunMap(hour){
+	function drawSunMap(date){
 		var canvas = $('#sun-map')[0];
 		var context = canvas.getContext('2d');
-		var gran = 90;
-		var date = new Date();
-		$('#time').text(date.toTimeString());
-
-		context.fillStyle = "#fff";
-		context.fillRect(0,0,360,180);
-		if (typeof(hour) != 'undefined') {
-			date.setUTCHours(hour);
+		
+		var coord = astro.getGeographicCoordOfSun(date);
+		var cLat = degToRad(coord.lat);
+		var cLon = degToRad(coord.lon);
+		//draw equator
+		context.clearRect(0,0,360,180);
+		context.strokeStyle = "rgba(0,0,40,0.5)";
+		context.moveTo(0, 90);
+		context.lineTo(360, 90);
+		context.stroke();
+		//draw shadow of darkness
+		var above = getEdgeOfBrightness(cLon, cLat, cLon) > cLat;
+		context.fillStyle = "rgba(0,0,40,0.3)";
+		context.moveTo(360, above ? 0 : 180);
+		context.lineTo(  0, above ? 0 : 180);
+		for (var i = 0; i <= 360; i++){
+			var lon = Math.PI * (i - 180) / 180;
+			var lat = getEdgeOfBrightness(lon, cLat, cLon);
+			var j = 180 * ((Math.PI/2 - lat)/ Math.PI);
+			context.lineTo(i, j);
 		}
-		var frame = new FrameOfReference(date, 0, 0);
-		for (var i = 0; i <= gran; i++){
-			for (var j = 0; j <= gran; j++){
-				frame.lat = 90 - (i * 180 / gran);
-				frame.lon = -180 + (j * 360 / gran);
-				var isLight = frame.getHorizontalFromEquatorial(astro.getSun(date)).al > 0;
-				if (!isLight){
-					context.fillStyle = "#009";
-					context.fillRect(4*j,2*i,4, 2);
-				}
-			}
-		}	
+		context.fill();
+
+		context.fillStyle = "#ff0";
+		context.strokeStyle = '#ff0';
+		context.beginPath();
+		context.arc(180 + coord.lon, 90 - coord.lat / Math.PI, 2, 0, Math.PI*2, true);
+		context.closePath();
+		context.fill();
+	}
+	function getEdgeOfBrightness(lon, theta, phi){ 
+		if (Math.cos(lon - phi) == 0) return 0;
+		return -1 * MathExt.sgn(Math.sin(theta) * Math.cos(lon - phi)) * Math.asin(Math.cos(theta) / 
+					 Math.sqrt(1 + Math.pow(Math.tan(lon - phi) * Math.sin(theta), 2)));
 	}
 	function benchmark(fast){
 		$.log('beginning benchmark', true); 
@@ -87,8 +100,8 @@
 		<canvas id="canvas" width="800" height="500"></canvas>
 	</div>
 	<div id="model-container">
-		<div id="time"></div>
 		<canvas id="sun-map" width="360" height="180"></canvas>
+		<div id="time"></div>
 		<div>
 			az = <span id="model_v_az"></span><br>
 			al = <span id="model_v_al"></span><br>

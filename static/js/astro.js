@@ -22,13 +22,28 @@ astro = {
 		var d = astro.getDaysFromRef(date) + astro.getTimeFraction(date)/24;
 		return d;
 	},
-	getSiderealTime : function(date, longitude){
+	getSiderealTimeAtMeridian : function(date){
 		var T = astro.getJulianCenturies(astro.getDaysIncludingTimeFromRef(date));//centuries
-		var S_0 = 6.6974 + 2400.0513 * T;
+		var S_0 = 6.6974 + 24.000513 * (100 * T);
 		var t_UT = astro.getTimeFraction(date);
 		var S_G = S_0 + (366.2422 / 365.2422) * t_UT;
+		return S_G;
+	},
+	getSiderealTime : function(date, longitude){
+		var S_G = astro.getSiderealTimeAtMeridian(date);
 		var S = S_G + longitude / 15;
-		return S;
+		return MathExt.translatePeriodic(S, 0, 24);
+	},
+	getLongitude : function(date, siderealTime){
+		var S_G = astro.getSiderealTimeAtMeridian(date);
+		var lon = 15 * (siderealTime - S_G);
+		return MathExt.translatePeriodic(lon, -180, 180);
+	},
+	getGeographicCoordOfSun : function(date){
+		var sun =  astro.getSun(date);
+		var lat = sun.dec;
+		var lon = astro.getLongitude(date, sun.ra);
+		return new GeographicCoord(lat, lon);
 	},
 	getMeanLongitudeOfSun : function(date){
 		var T = astro.getJulianCenturies(astro.getDaysIncludingTimeFromRef(date));
@@ -57,21 +72,12 @@ astro = {
 		var K = 23.439 - 0.013 * T;
 		return K;
 	},
-	getRightAscensionOfSun : function(date){
+	getSun : function(date){
 		var L_S = astro.getTrueEclipticalLongitudeOfSun(date);
 		var K = astro.getObliquityOfOrbit(date);
 		var R_S = radToHours(Math.atan2(Math.sin(degToRad(L_S))*Math.cos(degToRad(K)),Math.cos(degToRad(L_S))));
-		return R_S;
-	},
-	getDeclinationOfSun : function(date){
-		var K = astro.getObliquityOfOrbit(date);
-		var R_S = astro.getRightAscensionOfSun(date);
 		var D_S = radToDeg(Math.asin(Math.sin(hoursToRad(R_S)) * Math.sin(degToRad(K))));
-		return D_S;
-	},
-	getSun : function(date){
-		return new EquatorialCoord(astro.getRightAscensionOfSun(date),
-				astro.getDeclinationOfSun(date));
+		return new EquatorialCoord(R_S, D_S);
 	}
 }
 
@@ -99,9 +105,12 @@ FrameOfReference = function(date, lat, lon){
 	this.getHorizontalFromEquatorial = function(eq){
 		//azimuth
 		var ha = hoursToRad(astro.getSiderealTime(this.date, this.lon) - eq.ra);//hour angle
-		var az = Math.atan2(-1*Math.sin(ha), Math.tan(degToRad(eq.dec))*Math.cos(degToRad(this.lat)) - Math.sin(degToRad(this.lat))*Math.cos(ha));
+		var az = Math.atan2(-1 * Math.sin(ha), 
+					Math.tan(degToRad(eq.dec)) * Math.cos(degToRad(this.lat)) - 
+					Math.sin(degToRad(this.lat)) * Math.cos(ha));
 		//altitude
-		var al = Math.asin(Math.sin(degToRad(this.lat)) * Math.sin(degToRad(eq.dec)) + Math.cos(degToRad(this.lat)) * Math.cos(degToRad(eq.dec)) * Math.cos(ha));
+		var al = Math.asin(Math.sin(degToRad(this.lat)) * Math.sin(degToRad(eq.dec)) + 
+					Math.cos(degToRad(this.lat)) * Math.cos(degToRad(eq.dec)) * Math.cos(ha));
 		return new HorizontalCoord(az, al);
 	}
 	
@@ -113,4 +122,15 @@ FrameOfReference = function(date, lat, lon){
 EquatorialCoord = function(ra, dec){
 	this.ra = ra;//alpha
 	this.dec = dec;//delta
+	this.toString = function(){
+		return '(' + this.dec + ',' + this.ra + ')';
+	}
+}
+
+GeographicCoord = function(lat, lon){
+	this.lat = lat;
+	this.lon = lon;
+	this.toString = function(){
+		return '(' + this.lat + ',' + this.lon + ')';
+	}
 }
