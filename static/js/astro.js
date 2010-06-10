@@ -23,7 +23,7 @@ astro = {
 		return d;
 	},
 	getSiderealTimeAtMeridian : function(date){
-		var T = astro.getJulianCenturies(astro.getDaysIncludingTimeFromRef(date));//centuries
+		var T = astro.getJulianCenturies(astro.getDaysIncludingTimeFromRef(date));
 		var S_0 = 6.6974 + 24.000513 * (100 * T);
 		var t_UT = astro.getTimeFraction(date);
 		var S_G = S_0 + (366.2422 / 365.2422) * t_UT;
@@ -39,6 +39,11 @@ astro = {
 		var lon = 15 * (siderealTime - S_G);
 		return MathExt.translatePeriodic(lon, -180, 180);
 	},
+	/**
+	 * returns the coordinate for which the sun is directly overhead at the 
+	 * given date.
+	 * @param {Date} date
+	 */
 	getGeographicCoordOfSun : function(date){
 		var sun =  astro.getSun(date);
 		var lat = sun.dec;
@@ -116,21 +121,5 @@ FrameOfReference = function(date, lat, lon){
 	
 	this.getSiderealTime = function(){
 		return astro.getSiderealTime(this.date, this.lon);
-	}
-}
-
-EquatorialCoord = function(ra, dec){
-	this.ra = ra;//alpha
-	this.dec = dec;//delta
-	this.toString = function(){
-		return '(' + this.dec + ',' + this.ra + ')';
-	}
-}
-
-GeographicCoord = function(lat, lon){
-	this.lat = lat;
-	this.lon = lon;
-	this.toString = function(){
-		return '(' + this.lat + ',' + this.lon + ')';
 	}
 }

@@ -52,7 +52,6 @@ MathExt = {
 	}
 }
 
-
 $.extend({
 	log : function(msg, force) {
 		if (force || debug && typeof(console)!="undefined" && console)
@@ -69,3 +68,19 @@ $.extend({
 			return results[1];
 	}
 });
+
+map = function(original, func){
+	var mappedArray = [], i;
+	if ($.isArray(original)){
+		mappedArray = [];
+		for (i = 0; i < original.length; i++){
+			mappedArray.push(func.call(null,original[i], i));
+		}
+	} else {
+		mappedArray = [];
+		for (i in original){
+			mappedArray.push(func.call(null,original[i], i));
+		}
+	}
+	return mappedArray;
+};

@@ -1,20 +1,4 @@
 debug = 0;
-map = function(original, func){
-	var mappedArray = [], i;
-	if ($.isArray(original)){
-		mappedArray = [];
-		for (i = 0; i < original.length; i++){
-			mappedArray.push(func.call(null,original[i], i));
-		}
-	} else {
-		mappedArray = [];
-		for (i in original){
-			mappedArray.push(func.call(null,original[i], i));
-		}
-	}
-	return mappedArray;
-};
-
 
 Application  = {
 	updateHash : function(viewer){
@@ -510,18 +494,15 @@ ProjectedObject = function(screen){
 	this.normCoords = [];
 	
 	this.addCoordInside = function(coord){
-//		$.log('add inside');
 		this.isOutside = false;
 		this.angleOfLastNonInteriorPoint = null;
 		this.addCoord(coord);
 	};
 	this.addCoordOutside = function(theta){
-		$.log('add outside:' + theta);
 		this.updateOutsideAngle(theta);
 		this.isOutside = true;
 	};
 	this.addCoordOnBoundary = function(coord){
-//		$.log('add boundary');
 		var thetaEnd = MathExt.getAngle(coord);
 		this.updateOutsideAngle(thetaEnd);
 		if (this.isOutside){
@@ -660,7 +641,7 @@ ProjectedCaptionSet = function(screen){
 	};
 };
 
-Canvas = function(canvasObject){
+CanvasPane = function(canvasObject){
 	this.canvas = canvasObject;
 	this.context = canvasObject.getContext('2d');
 	this.context.textAlign = 'start';
@@ -800,7 +781,7 @@ CaptionStyle = function(textStyle, font, pointStyle, radius){
 	this.font = font;
 	this.pointStyle = pointStyle;
 	this.radius = radius;
-}
+};
 
 HorizontalCoord = function(az, al){
 	this.az = az;
@@ -813,6 +794,22 @@ HorizontalCoord = function(az, al){
 	};
 	this.toString = function(){
 		return '(' + this.az + ',' + this.al + ')';
+	};
+};
+
+EquatorialCoord = function(ra, dec){
+	this.ra = ra;//alpha
+	this.dec = dec;//delta
+	this.toString = function(){
+		return '(' + this.dec + ',' + this.ra + ')';
+	};
+};
+
+GeographicCoord = function(lat, lon){
+	this.lat = lat;
+	this.lon = lon;
+	this.toString = function(){
+		return '(' + this.lat + ',' + this.lon + ')';
 	};
 };
 
