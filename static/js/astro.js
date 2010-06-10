@@ -1,5 +1,5 @@
 astro = {
-	getDaysFromRef : function(date){
+	getFullDays : function(date){
 		var y = date.getUTCFullYear();
 		var m = date.getUTCMonth()+1;
 		var d = date.getUTCDate();
@@ -8,22 +8,22 @@ astro = {
 			+ Math.floor(275*m/9) + d - 730531.5;
 		return d_0;
 	},
-	getJulianCenturies : function(days){
-		var T_0 = days / 36525; 
-		return T_0;
-	},
 	getTimeFraction : function(date){
 		var t_UT = (date.getUTCSeconds()/60 + 
 							date.getUTCMinutes())/60 + 
 										date.getUTCHours();
 		return t_UT;
 	},
-	getDaysIncludingTimeFromRef : function(date){
-		var d = astro.getDaysFromRef(date) + astro.getTimeFraction(date)/24;
+	getDays : function(date){
+		var d = astro.getFullDays(date) + astro.getTimeFraction(date)/24;
 		return d;
 	},
+	getJulianCenturies : function(days){
+		var T_0 = days / 36525; 
+		return T_0;
+	},
 	getSiderealTimeAtMeridian : function(date){
-		var T = astro.getJulianCenturies(astro.getDaysIncludingTimeFromRef(date));
+		var T = astro.getJulianCenturies(astro.getDays(date));
 		var S_0 = 6.6974 + 24.000513 * (100 * T);
 		var t_UT = astro.getTimeFraction(date);
 		var S_G = S_0 + (366.2422 / 365.2422) * t_UT;
@@ -50,36 +50,37 @@ astro = {
 		var lon = astro.getLongitude(date, sun.ra);
 		return new GeographicCoord(lat, lon);
 	},
-	getMeanLongitudeOfSun : function(date){
-		var T = astro.getJulianCenturies(astro.getDaysIncludingTimeFromRef(date));
+	
+	/*
+	 * The following are functions that are necessary for computing the position of the sun
+	 */
+	getMeanLongitudeOfSun : function(T){
 		var L_0 = 280.466 + 36000.770 * T;
 		return L_0;
 	},
-	getMeanAnomalyOfSun : function(date){
-		var T = astro.getJulianCenturies(astro.getDaysIncludingTimeFromRef(date));
+	getMeanAnomalyOfSun : function(T){
 		var M_0 = 357.529 + 35999.050 * T;
 		return M_0;
 	},
-	getEquationOfCenterForSun : function(date){
-		var T = astro.getJulianCenturies(astro.getDaysIncludingTimeFromRef(date));
-		var M_0 = astro.getMeanAnomalyOfSun(date);
+	getEquationOfCenterForSun : function(T){
+		var M_0 = astro.getMeanAnomalyOfSun(T);
 		var C = (1.915 - 0.005 * T) * Math.sin(degToRad(M_0)) + 0.020 * Math.sin(degToRad(2 * M_0));
 		return C;
 	},
-	getTrueEclipticalLongitudeOfSun : function(date){
-		var L_0 = astro.getMeanLongitudeOfSun(date);
-		var C = astro.getEquationOfCenterForSun(date);
+	getTrueEclipticalLongitudeOfSun : function(T){
+		var L_0 = astro.getMeanLongitudeOfSun(T);
+		var C = astro.getEquationOfCenterForSun(T);
 		L_S = L_0 + C;
 		return L_S;
 	},
-	getObliquityOfOrbit : function(date){
-		var T = astro.getJulianCenturies(astro.getDaysIncludingTimeFromRef(date));
-		var K = 23.439 - 0.013 * T;
+	getObliquityOfOrbit : function(T){
+		var K = 23.4393 - 0.01301 * T;
 		return K;
 	},
 	getSun : function(date){
-		var L_S = astro.getTrueEclipticalLongitudeOfSun(date);
-		var K = astro.getObliquityOfOrbit(date);
+		var T = astro.getJulianCenturies(astro.getDays(date));
+		var L_S = astro.getTrueEclipticalLongitudeOfSun(T);
+		var K = astro.getObliquityOfOrbit(T);
 		var R_S = radToHours(Math.atan2(Math.sin(degToRad(L_S))*Math.cos(degToRad(K)),Math.cos(degToRad(L_S))));
 		var D_S = radToDeg(Math.asin(Math.sin(hoursToRad(R_S)) * Math.sin(degToRad(K))));
 		return new EquatorialCoord(R_S, D_S);

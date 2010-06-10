@@ -15,7 +15,7 @@
     <script type="text/javascript" src="/static/js/celeste.js"></script>
 <script type="text/javascript">	
 	$(function(){//onReady
-		var pane = new Canvas($('#canvas')[0]);
+		var pane = new CanvasPane($('#canvas')[0]);
 		var sunMap = new SunMap($('#sun-map')[0]);
 		_viewer = new Viewer(pane, sunMap, Application.parseHash());
 		_keyboard = new Keyboard(_viewer);
