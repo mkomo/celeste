@@ -6,7 +6,9 @@
 	<meta name="description" content=""/>
 	<meta name="keywords" content=""/>
     <link type="text/css" rel="stylesheet" href="/static/css/main.css" />
+	<link type="text/css" href="/static/js/datepicker/jquery-ui-1.8.1.custom.css" rel="stylesheet" />	
     <script type="text/javascript" src="/static/js/jquery.notmin.js"></script>
+    <script type="text/javascript" src="/static/js/datepicker/jquery-ui-1.8.1.custom.min.js"></script>
     <script type="text/javascript" src="/static/js/util.js"></script>
     <script type="text/javascript" src="/static/js/objects.js"></script>
     <script type="text/javascript" src="/static/js/astro.js"></script>
@@ -15,12 +17,8 @@
 	$(function(){//onReady
 		var pane = new Canvas($('#canvas')[0]);
 		var sunMap = new SunMap($('#sun-map')[0]);
-		_viewer = new Viewer(pane, sunMap);
-		if ($.param('al') != '') _viewer.al = parseFloat($.param('al'));
-		if ($.param('az') != '') _viewer.az = parseFloat($.param('az')); 
-		if ($.param('d') != '') _viewer.d = parseFloat($.param('d')); 
+		_viewer = new Viewer(pane, sunMap, Application.parseHash());
 		_keyboard = new Keyboard(_viewer);
-		_viewer.notifyFrameOfReferenceListeners();
 		$(document).keydown(function(e){
 			_keyboard.keyChange(e, true);
 			if (debug){
@@ -32,6 +30,38 @@
 		if (!debug){
 			setInterval(keyboardListener, 35);
 		}
+
+		// Datepicker
+		$('#datepicker').datepicker({
+			changeMonth: true,
+			changeYear: true,
+			defaultDate: new Date(_viewer.getTime()),
+            onSelect: function(dateText, inst){
+            	var date = $(this).datepicker('getDate');
+            	_viewer.setDate(date);
+            },
+			onChangeMonthYear: function(year, month, inst){
+            	var date = $(this).datepicker('getDate');
+            	date.setFullYear(year);
+            	date.setMonth(month-1);
+            	_viewer.setDate(date);
+            }
+		});
+		$('#now-link').click(function(){
+		 	_viewer.setTime((new Date()).getTime());
+			return false;	
+		});
+		$("#timeslider").slider({
+			range: "min",
+			value: _viewer.getMinutes(),
+			min: 0,
+			max: 1439,
+			slide: function(event, ui) {
+				_viewer.setMinutes(ui.value);
+			}
+		});
+		_viewer.notifyFrameOfReferenceListeners();
+
 	});
 	function keyboardListener(){
 		_keyboard.keyboardResponse();
@@ -40,16 +70,22 @@
 </head>
 <body>
 <div>
-	<div id="canvas-container">
-		<canvas id="canvas" width="800" height="500"></canvas>
+	<div id="canvas-column">
+		<div id="canvas-container">
+			<canvas id="canvas" width="800" height="500"></canvas>
+			<div id="bearing-caption" class="ui-state-default">
+				<div id="model_v_az"></div>
+				<div id="model_v_al"></div>
+			</div>
+		</div>
+		<div id="screen-width-holder"><span id="model_s_d"></span></div>
 	</div>
 	<div id="model-container">
-		<canvas id="sun-map" width="360" height="180"></canvas>
-		<div id="time"></div>
-		<div>
-			az = <span id="model_v_az"></span><br>
-			al = <span id="model_v_al"></span><br>
-			dist = <span id="model_s_d"></span><br>
+		<div id="date-and-time" class="ui-corner-all ui-widget-content">
+			<canvas id="sun-map" width="240" height="120"></canvas>
+			<div><span id="model_v_time"></span> (<a id="now-link" href="#">reset</a>)</div>
+			<div id="timeslider"></div>
+			<div id="datepicker"></div>
 		</div>
 	</div>
 	<div style="clear: both">

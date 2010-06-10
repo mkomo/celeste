@@ -1,0 +1,10 @@
+HTML {COLOR: black; font-size: 10pt; font-family: "Comic Sans MS, sans-serif, arial"}
+TD {COLOR: black; font-size: 10pt}
+P {COLOR: black; font-size: 10pt}
+B {COLOR: black; font-size: 12pt}
+U {COLOR: black; font-size: 12pt}
+BODY {COLOR: black; background-color: white; background-image: url("universe1a.gif"); background-attachment: fixed}
+A:link {COLOR: blue; TEXT-DECORATION: underline}
+A:active {COLOR: red; TEXT-DECORATION: none}
+A:visited {COLOR: purple; TEXT-DECORATION: underline}
+A:hover {COLOR: red; TEXT-DECORATION: underline}

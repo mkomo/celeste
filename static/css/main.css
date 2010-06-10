@@ -1,14 +1,45 @@
+body{
+	font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
+}
 #canvas{
 	border: 1px solid #555;	
 }
-#canvas-container{
+#canvas-column{
 	float: left;
+}
+#canvas-container{
+	position: relative;
+}
+#screen-width-holder{
+	text-align: center;
+	border: 1px solid #000;
+	border-top: none;
+}
+#bearing-caption{
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+	text-align: right;	
+	padding: 4px;
 }
 #model-container{
 	float: left;
 	margin-left: 4px;
+	text-align: center;
 }
 #sun-map{
+	margin: 2px;
 	border: 1px solid #88F;
-	background: url("/static/img/sun-map.png")
+	background: url("/static/img/sun-map-240.png")
+}
+#date-and-time{
+	padding: 3px;
+}
+#now-link{
+	text-decoration: none;
+	font-weight: bold;
+	color: #2E6E9E;
+}
+#timeslider{
+	margin: 6px 30px;
 }

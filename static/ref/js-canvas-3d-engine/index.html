@@ -1,0 +1,87 @@
+<html>
+	<head>
+		<title>3D Engine in pure JavaScript</title>
+
+		<script type="text/javascript" src="js/Point.js" ></script>
+		<script type="text/javascript" src="js/Triangle.js" ></script>
+		<script type="text/javascript" src="js/Matrix.js" ></script>
+		<script type="text/javascript" src="js/Object.js" ></script>
+
+		<script type="text/javascript" src="js/Cube.js" ></script>
+		<script type="text/javascript" src="js/Pyramid.js" ></script>
+
+		<script type="text/javascript" src="js/Engine.js" ></script>
+
+		<style>
+			/* http://beta.dailycolorscheme.com/archive/2006/09/16 */
+			body {
+				background: #CBCB9C;
+			}
+
+			#canvas {
+				width:  640px;
+				height: 480px;
+				background: #eeeedf;
+				border: 1px solid #111;
+			}
+
+			#wrapper {
+				text-align: center;
+			}
+			#wrapper p {
+				width: 40%;
+				margin: 0 auto;
+				text-align: justify;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="wrapper">
+			<canvas id="canvas" height="480" width="640"></canvas>
+		</div>
+		<script type="text/javascript">		
+engine = new Engine('canvas');
+
+cube = cube.scale(40,40,40);
+
+var delta = Math.PI/90;
+var i = 0, j = 0, k = 0;
+cube.update = function() {
+	if (key[2]){
+		i--;
+	} else if (key[3]){
+		i++;
+	}
+	if (key[0]){
+		j--;
+	} else if (key[1]){
+		j++;
+	}
+	r = xrot(i*delta,0,0);
+	r = r.mmultiply(yrot(0,j*delta,0));
+	r = r.mmultiply(zrot(0,0,k*delta));
+	return this.multiply(r);
+}
+
+engine.register(cube);	
+
+var key=[0,0,0,0,0,0]; // left, right, up, down
+
+function changeKey(which, to){
+	switch (which){
+		case 65: case 37: key[0]=to; break; // left
+		case 68: case 39: key[1]=to; break; // right
+		case 38: key[2]=to; break; // up
+		case 40: key[3]=to; break;// down
+		case 87: key[4]=to; break;// w
+		case 83: key[5]=to; break;// s
+	}
+}
+document.onkeydown=function(e){changeKey((e||window.event).keyCode, 1);}
+document.onkeyup=function(e){changeKey((e||window.event).keyCode, 0);}	
+window.onload=function(){
+	engine.run();
+}
+		</script>
+	</body>	
+</html>
