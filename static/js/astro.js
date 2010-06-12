@@ -91,16 +91,16 @@ degToRad = function(degrees){
 	return degrees * Math.PI/180;
 }
 
+radToDeg = function(rad){
+	return rad * 180/Math.PI;
+}
+
 hoursToRad = function(hours){
 	return hours * Math.PI / 12;
 }
 
 radToHours = function(rad){
 	return rad  * 12 / Math.PI;
-}
-
-radToDeg = function(rad){
-	return rad * 180/Math.PI;
 }
 
 FrameOfReference = function(date, lat, lon){
