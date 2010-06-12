@@ -106,7 +106,7 @@ ObjectFactory = {
 
 		var tempDate = new Date(date.getTime()); 
 		var frame = new FrameOfReference(tempDate, lat, lon);
-		var hCoord = frame.getHorizontalFromEquatorial(astro.getSun(date));
+		var hCoord = frame.getHorizontalFromEquatorial(sunObj.compute(date));
 		var angDiam = 32/60 * (Math.PI/180); //32 arcmin
 		sunPath.addChildren(ObjectFactory.point("rgba(255,255,0,1)", angDiam/2)
 				   .addPoints(hCoord));
@@ -116,7 +116,7 @@ ObjectFactory = {
 		frame.date.setSeconds(0,0);
 		for (var hour = 0; hour <= 24; hour++){
 			frame.date.setHours(hour);
-			hCoord = frame.getHorizontalFromEquatorial(astro.getSun(frame.date));
+			hCoord = frame.getHorizontalFromEquatorial(sunObj.compute(frame.date));
 			sunPath.addPoints(hCoord);
 			var hourString = (hour >= 10 ? '' : '0') + hour + '00';
 			hour != 24 && sunPath.addCaptions(new Caption(hourString, hCoord, captionStyle));
