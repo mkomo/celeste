@@ -68,19 +68,19 @@ $.extend({
 			return results[1];
 	}
 });
-
-map = function(original, func){
-	var mappedArray = [], i;
-	if ($.isArray(original)){
-		mappedArray = [];
-		for (i = 0; i < original.length; i++){
-			mappedArray.push(func.call(null,original[i], i));
-		}
-	} else {
-		mappedArray = [];
+mkutil = {
+	mapObjectToArray : function(original, func){
+		var mappedArray = [], i;
 		for (i in original){
 			mappedArray.push(func.call(null,original[i], i));
 		}
+		return mappedArray;
+	},
+	mapObjectToObject : function(original, func){
+		var mappedObj = {}, i;
+		for (i in original){
+			mappedObj[i] = func.call(null,original[i], i);
+		}
+		return mappedObj;
 	}
-	return mappedArray;
-};
+}

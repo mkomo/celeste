@@ -12,7 +12,7 @@ Application  = {
 			ro: viewer.ro,
 			d: viewer.d
 		};
-		window.location.hash = map(hashProps, function(value,key){
+		window.location.hash = mkutil.mapObjectToArray(hashProps, function(value,key){
 					return key + '=' + value;
 				}).join('&');
 	},
