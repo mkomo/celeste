@@ -39,6 +39,15 @@ astro = {
 		var lon = 15 * (siderealTime - S_G);
 		return MathExt.translatePeriodic(lon, -180, 180);
 	},
+	getEccentricAnomaly : function(M, e, precision, E_0){
+		if (typeof E_0 === 'undefined') E_0 = 0;
+		var E = M + e * Math.sin(E_0);
+		if (Math.abs(E - E_0) > precision) {
+			return astro.getEccentricAnomaly(M, e, precision, E);
+		} else {
+			return E;
+		}
+	},
 	/**
 	 * returns the coordinate for which the sun is directly overhead at the 
 	 * given date.
@@ -134,11 +143,8 @@ CelestialObject = function(params){
 		}
 
 		// Calculate eccentric anomaly
-		//    E = M + (180/pi) * e * sin(M) * (1 + e * cos(M))
-		var E = params.M + radToDeg(params.e) * 
-						   Math.sin(degToRad(params.M)) * 
-						   (1 + params.e * Math.cos(degToRad(params.M)));
-					
+		var E = radToDeg(astro.getEccentricAnomaly(degToRad(params.M), params.e, 0.0001));
+		
 		//Now we compute the Sun's rectangular coordinates in the plane of the ecliptic, where the X axis points towards the perihelion:
 		//
 		//    x = r * cos(v) = cos(E) - e
