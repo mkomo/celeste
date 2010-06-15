@@ -12,9 +12,10 @@ Application  = {
 			ro: viewer.ro,
 			d: viewer.d
 		};
-		window.location.hash = mkutil.mapObjectToArray(hashProps, function(value,key){
-					return key + '=' + value;
-				}).join('&');
+		window.location.hash = mkutil.objectToArray(
+			mkutil.mapObject(hashProps, function(value,key){
+				return key + '=' + value;
+			})).join('&');
 	},
 	parseHash : function(){
 		var hash = window.location.hash.substring(1).split('&');
@@ -801,7 +802,15 @@ EquatorialCoord = function(ra, dec){
 	this.ra = ra;//alpha
 	this.dec = dec;//delta
 	this.toString = function(){
-		return '(' + this.dec + ',' + this.ra + ')';
+		var d = Math.floor(this.dec);
+		var m = Math.floor(60* (this.dec-d));
+		var s = Math.floor(60* (60*(this.dec-d)-m));
+		var decStr = d + '_deg ' + m + '\' ' + s + '"';
+		var h = Math.floor(this.ra);
+		var m = Math.floor(60* (this.ra-h));
+		var s = Math.floor(60* (60*(this.ra-h)-m));
+		var raStr = h + 'h ' + m + 'm ' + s + 's';
+		return '(' + decStr + ',' + raStr + ')';
 	};
 };
 
@@ -813,6 +822,61 @@ GeographicCoord = function(lat, lon){
 	};
 };
 
+SphericalCoord = function(params){
+	this.lat = params.lat;
+	this.lon = params.lon;
+	this.r = params.r;
+	this.toRect = function(){
+		return new RectangularCoord({
+			x : this.r * Math.cos(this.lat) * Math.cos(this.lon),
+			y : this.r * Math.cos(this.lat) * Math.sin(this.lon),
+			z : this.r * Math.sin(this.lat)
+		});
+	};
+	this.toString = function(){
+		return '(' + this.lat + ',' + this.lon + ')';
+	};
+};
+RectangularCoord = function(params){
+	this.x = params.x;
+	this.y = params.y;
+	this.z = params.z;
+	
+	this.rotateX = function(theta){
+		return new RectangularCoord({
+			x: this.x, 
+			y: this.y * Math.cos(theta) - this.z * Math.sin(theta), 
+			z: this.z * Math.cos(theta) + this.y * Math.sin(theta)
+		});
+	};
+
+	this.rotateY = function(theta){
+		return new RectangularCoord({
+			x: this.x * Math.cos(theta) + this.z * Math.sin(theta), 
+			y: this.y,
+			z: this.z * Math.cos(theta) - this.x * Math.sin(theta)
+		});
+	};
+
+	this.rotateZ = function(theta){
+		return new RectangularCoord({
+			x: this.x * Math.cos(theta) - this.y * Math.sin(theta), 
+			y: this.y * Math.cos(theta) + this.x * Math.sin(theta),
+			z: this.z
+		});
+	};
+	
+	this.toSpherical = function(){
+		return new SphericalCoord({
+			lat : radToDeg(Math.atan2(this.z, Math.sqrt(this.x * this.x + this.y * this.y))),
+			lon : radToDeg(Math.atan2(this.y, this.x)),
+			r : Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z)
+		});
+	};
+	this.toString = function(){
+		return '(' + x.toFixed(12) + ',' + y.toFixed(12) + ',' + z.toFixed(12) + ')';
+	};
+}
 Pixel = function(x,y){
 	this.x = x;
 	this.y = y;
