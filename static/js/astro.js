@@ -39,6 +39,15 @@ astro = {
 		var lon = 15 * (siderealTime - S_G);
 		return MathExt.translatePeriodic(lon, -180, 180);
 	},
+	/**
+	 * Iteratively computes E given the mean anomaly, the eccentricity, and the 
+	 * desired precision.
+	 * used instead of the given approximation of E in tutorial
+	 * @param {Object} M
+	 * @param {Object} e
+	 * @param {Object} precision
+	 * @param {Object} E_0
+	 */
 	getEccentricAnomaly : function(M, e, precision, E_0){
 		if (typeof E_0 === 'undefined') E_0 = 0;
 		var E = M + e * Math.sin(E_0);
@@ -75,6 +84,10 @@ hoursToRad = function(hours){
 
 radToHours = function(rad){
 	return rad  * 12 / Math.PI;
+}
+
+degToHours = function(deg){
+	return deg / 15;
 }
 
 FrameOfReference = function(date, lat, lon){
@@ -125,64 +138,55 @@ CelestialObject = function(params){
 		//       Mean Anomaly is 0 at perihelion and 180 degrees at aphelion
 		M : params.M
 	}
+	if (typeof params.perturb === 'function'){
+		this.perturb = params.perturb;
+	}
 	
 	this.compute = function(date){
 		var d = astro.getDays(date) + 1.5;
-		var params = mkutil.mapObjectToObject(this.params, function(value){
-			if (value.length === 1){
-				return value[0]; 
-			} else {
-				return value[0] + value[1]*d;
-			}
-		});
-		//normalize -- not a necessary step? just aesthetic.
 		var degs = ['N','i','w','M'];
-		var i, len = degs.length;
-		for (i = 0; i < len; i++){
-			params[degs[i]] = MathExt.translatePeriodic(params[degs[i]], 0,360);
-		}
+		var params = mkutil.mapObject(this.params, function(value, key){
+			var x = value[0];
+			if (value.length === 2){
+				x += value[1]*d;
+			}
+			//normalize -- not a necessary step? just aesthetic.
+			if (degs.indexOf(key) != -1){
+				x = MathExt.translatePeriodic(x, 0, 360);
+			}
+			return x;
+		});
 
 		// Calculate eccentric anomaly
 		var E = radToDeg(astro.getEccentricAnomaly(degToRad(params.M), params.e, 0.0001));
 		
-		//Now we compute the Sun's rectangular coordinates in the plane of the ecliptic, where the X axis points towards the perihelion:
-		//
-		//    x = r * cos(v) = cos(E) - e
-		//    y = r * sin(v) = sin(E) * sqrt(1 - e*e)
-		var x = params.a * (Math.cos(degToRad(E)) - params.e);
-		var y = params.a * Math.sin(degToRad(E)) * Math.sqrt(1 - params.e*params.e);
+		// compute the coordinates in the plane of the orbit, 
+		// where the X axis points towards the perihelion:
+		var c = new RectangularCoord({
+			x : params.a * (Math.cos(degToRad(E)) - params.e),
+			y : params.a * Math.sin(degToRad(E)) * Math.sqrt(1 - params.e*params.e),
+			z : 0
+		});
+		// Now we can compute the ecliptic coords:
+		//rotate ascending node to x=0 (in y direction)
+		c = c.rotateZ(degToRad(params.w));
+		//rotate into plane of inclination
+		c = c.rotateX(degToRad(params.i));
+		//rotate ascending node into correct position
+		c = c.rotateZ(degToRad(params.N));
 		
-		//Convert to distance and true anomaly:
-		//
-		//    r = sqrt(x*x + y*y)
-		//    v = arctan2( y, x )
-		var r = Math.sqrt(x*x + y*y);
-		var v = radToDeg(Math.atan2(y, x));
-		
-		//Now we can compute the ecliptic coords of the Sun:
-		//
-		//rotateZ by w, rotateX by i, rotateZ by N
-		var N = degToRad(params.N), vw = degToRad(v + params.w), i = degToRad(params.i);
-		var x = r * (Math.cos(N) * Math.cos(vw) - Math.sin(N) * Math.sin(vw) * Math.cos(i));
-		var y = r * (Math.sin(N) * Math.cos(vw) + Math.cos(N) * Math.sin(vw) * Math.cos(i));
-		var z = r * Math.sin(vw) * Math.sin(i);
-		
-		var r = Math.sqrt(x*x + y*y + z*z);
-	    var lon = radToDeg(Math.atan2(y, x));
-	    var lat = radToDeg(Math.atan2(z, Math.sqrt(x*x + y*y)));
-
+		//compute perturbations 
+		if (typeof this.perturb === "function") {
+			var eclCoord = c.toSpherical();
+			eclCoord = this.perturb(eclCoord, d);
+			c = eclCoord.toRect();
+		}
 		//rotate about the axial tilt of earth
 		var oblecl = degToRad(23.4393 - 3.563E-7 * d);
-		var x_eq = x;
-		var y_eq = y * Math.cos(oblecl) - z * Math.sin(oblecl);
-		var z_eq = y * Math.sin(oblecl) + z * Math.cos(oblecl);
+		var c_eq = c.rotateX(oblecl).toSpherical();
 		
-		//Convert to RA and Decl:
-		var r = r; // no change caused by rotation
-	    var RA = radToHours(Math.atan2(y_eq, x_eq));
-	    var Decl = radToDeg(Math.atan2(z_eq, Math.sqrt( x_eq*x_eq + y_eq*y_eq)));
-		return new EquatorialCoord(RA, Decl);
-	}
+		return new EquatorialCoord(degToHours(c_eq.lon), c_eq.lat);
+	};
 }
 sunObj = new CelestialObject({
 	N: [0],
@@ -199,5 +203,9 @@ moonObj = new CelestialObject({
     w: [318.0634, 0.1643573223],
     a: [ 60.2666],
     e: [0.054900],
-    M: [115.3654, 13.0649929509]
+    M: [115.3654, 13.0649929509], 
+	perturb: function(eclCoord, d){
+		$.log(eclCoord, true);
+		return eclCoord;
+	}
 });
