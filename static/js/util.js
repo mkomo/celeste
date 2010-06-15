@@ -69,18 +69,24 @@ $.extend({
 	}
 });
 mkutil = {
-	mapObjectToArray : function(original, func){
-		var mappedArray = [], i;
+	mapObject : function(original, func, keysToMap, includeAll){
+		var mappedObj = {}, i, mapAllKeys = ! $.isArray(keysToMap);
 		for (i in original){
-			mappedArray.push(func.call(null,original[i], i));
-		}
-		return mappedArray;
-	},
-	mapObjectToObject : function(original, func){
-		var mappedObj = {}, i;
-		for (i in original){
-			mappedObj[i] = func.call(null,original[i], i);
+			if (mapAllKeys || keysToMap.indexOf(i) != -1) {
+				mappedObj[i] = func.call(null, original[i], i);
+			} else if (includeAll){
+				mappedObj[i] = original[i];
+			}
 		}
 		return mappedObj;
+	},
+	objectToArray : function(obj, keysToInclude){
+		var mappedArray = [], i, mapAllKeys = ! $.isArray(keysToInclude);
+		for (i in obj){
+			if (mapAllKeys || keysToInclude.indexOf(i) != -1) {
+				mappedArray.push(obj[i]);
+			}
+		}
+		return mappedArray;
 	}
 }
