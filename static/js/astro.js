@@ -149,8 +149,8 @@ CelestialObject = function(params){
 		//
 		//    x = r * cos(v) = cos(E) - e
 		//    y = r * sin(v) = sin(E) * sqrt(1 - e*e)
-		var x = Math.cos(degToRad(E)) - params.e;
-		var y = Math.sin(degToRad(E)) * Math.sqrt(1 - params.e*params.e);
+		var x = params.a * (Math.cos(degToRad(E)) - params.e);
+		var y = params.a * Math.sin(degToRad(E)) * Math.sqrt(1 - params.e*params.e);
 		
 		//Convert to distance and true anomaly:
 		//
@@ -159,18 +159,18 @@ CelestialObject = function(params){
 		var r = Math.sqrt(x*x + y*y);
 		var v = radToDeg(Math.atan2(y, x));
 		
-		var z = r * Math.sin(degToRad(v+params.w)) * Math.sin(params.i);
-		
 		//Now we can compute the ecliptic coords of the Sun:
 		//
-		//    lon = v + w
-		var lon = MathExt.translatePeriodic(v + params.w, 0, 360);
-		var lat = 0;
+		//rotateZ by w, rotateX by i, rotateZ by N
+		var N = degToRad(params.N), vw = degToRad(v + params.w), i = degToRad(params.i);
+		var x = r * (Math.cos(N) * Math.cos(vw) - Math.sin(N) * Math.sin(vw) * Math.cos(i));
+		var y = r * (Math.sin(N) * Math.cos(vw) + Math.cos(N) * Math.sin(vw) * Math.cos(i));
+		var z = r * Math.sin(vw) * Math.sin(i);
 		
-		var x = r * Math.cos(degToRad(lon)) * Math.cos(degToRad(lat));
-		var y = r * Math.sin(degToRad(lon)) * Math.cos(degToRad(lat));
-		var z = r * Math.sin(lat);
-		
+		var r = Math.sqrt(x*x + y*y + z*z);
+	    var lon = radToDeg(Math.atan2(y, x));
+	    var lat = radToDeg(Math.atan2(z, Math.sqrt(x*x + y*y)));
+
 		//rotate about the axial tilt of earth
 		var oblecl = degToRad(23.4393 - 3.563E-7 * d);
 		var x_eq = x;
@@ -179,8 +179,8 @@ CelestialObject = function(params){
 		
 		//Convert to RA and Decl:
 		var r = r; // no change caused by rotation
-	    var RA = radToHours(Math.atan2( y_eq, x_eq));
-	    var Decl = radToDeg(Math.atan2( z_eq, Math.sqrt( x_eq*x_eq + y_eq*y_eq)));
+	    var RA = radToHours(Math.atan2(y_eq, x_eq));
+	    var Decl = radToDeg(Math.atan2(z_eq, Math.sqrt( x_eq*x_eq + y_eq*y_eq)));
 		return new EquatorialCoord(RA, Decl);
 	}
 }
@@ -191,4 +191,13 @@ sunObj = new CelestialObject({
     a: [1.000000],
     e: [0.016709, -1.151e-9],
     M: [356.0470, 0.9856002585]
+});
+
+moonObj = new CelestialObject({
+    N: [125.1228, -0.0529538083],
+    i: [  5.1454],
+    w: [318.0634, 0.1643573223],
+    a: [ 60.2666],
+    e: [0.054900],
+    M: [115.3654, 13.0649929509]
 });
