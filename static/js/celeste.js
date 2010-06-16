@@ -240,7 +240,7 @@ FirstPersonScreen = function(viewer, model, canvas){
 	
 	this.drawCompass = function(){
 		this.drawObject(this.compass);
-		this.drawObject(this.altitudeCircles);
+		//this.drawObject(this.altitudeCircles);
 	};
 	
 	this.drawAllObjects = function(){

@@ -11,8 +11,15 @@ Model = function(){
 		return this.objects;
 	}
 	this.update = function(date, lat, lon){
-		this.add('sun',ObjectFactory.createSunPath(date, lat, lon));
-		this.add('moon',ObjectFactory.createMoonPath(date, lat, lon));
+		this.add('sun',
+			ObjectFactory.createCelestialObject(astrodata.sun, date, lat, lon, true));
+		this.add('moon',
+			ObjectFactory.createCelestialObject(astrodata.moon, date, lat, lon, true));
+		for (var name in astrodata.planets){
+			this.add(name,
+				ObjectFactory.createCelestialObject(
+					astrodata.planets[name], date, lat, lon, false));
+		}
 	}
 }
 
@@ -84,7 +91,10 @@ ObjectFactory = {
 		var pi = Math.PI;
 		var sample = 6;
 		for (var i = 0; i < sample; i++){
-			earth.addPoints([new HorizontalCoord(2*pi*(i/sample), -1 * Math.acos(3950/(3950 + 6/5280)))]);
+			earth.addPoints([
+				new HorizontalCoord(2*pi*(i/sample), 
+					-1 * Math.acos(3950/(3950 + 6/5280)))
+			]);
 		}
 		return earth;
 	},
@@ -93,20 +103,14 @@ ObjectFactory = {
 		var pi = Math.PI;
 		var angles = new Array();
 		var sample = 50;
-//		for (var j = 1; j <= 8; j++){
-//			var c = ObjectFactory.line(debug ? "#fff" : "rgba(255,255,255,0.6)", 4);
-//			for (var i = 0; i <= sample; i++){
-//				c.addPoints([new HorizontalCoord(2*pi*(i/sample), pi*j/18)]);
-//			}
-//			circles.addChildren([c]);
-//		}
+		for (var j = 1; j <= 8; j++){
+			var c = ObjectFactory.line(debug ? "#fff" : "rgba(255,255,255,0.6)", 4);
+			for (var i = 0; i <= sample; i++){
+				c.addPoints([new HorizontalCoord(2*pi*(i/sample), pi*j/18)]);
+			}
+			circles.addChildren([c]);
+		}
 		return circles;
-	},
-	createSunPath : function(date, lat, lon){
-		return ObjectFactory.createCelestialObject(sunObj, date, lat, lon, true);
-	},
-	createMoonPath : function(date, lat, lon){
-		return ObjectFactory.createCelestialObject(moonObj, date, lat, lon, true);
 	},
 	createCelestialObject : function(cObj, date, lat, lon, withPath){
 		var tempDate = new Date(date.getTime()); 
@@ -114,25 +118,35 @@ ObjectFactory = {
 		var hCoord = cObj.getPositionInSky(frame);
 		var angDiam = cObj.getAngularDiameter(date);
 		var color = cObj.properties.color;
+		if (typeof color === 'undefined'){
+			color = '#fff';
+		}
 		var obj = ObjectFactory.point(color, angDiam/2);
 		obj.addPoints(hCoord);
+		var captionStyle = new CaptionStyle(color, '16px arial', color, 1);
+		obj.addCaptions(new Caption(cObj.properties.name, hCoord, captionStyle));
+		
 		if (withPath) {
-			var path = ObjectFactory.line(color, 4);
-			obj.addChildren(path);
-			var captionStyle = new CaptionStyle("#000", '16px arial', color, 1);
-			frame.date.setMinutes(0);
-			frame.date.setSeconds(0, 0);
-			for (var hour = 0; hour <= 24; hour++) {
-				frame.date.setHours(hour);
-				hCoord = hCoord = cObj.getPositionInSky(frame);
-				path.addPoints(hCoord);
-				if (hour != 24){
-					var hourString = (hour >= 10 ? '' : '0') + hour + '00';
-					path.addCaptions(new Caption(hourString, hCoord, captionStyle));	
-				}
-			}
+			obj.addChildren(ObjectFactory.createCelestialPath(cObj, frame, color));
 		}
 		return obj;
+	},
+	createCelestialPath : function(cObj, frame, color){
+		var path = ObjectFactory.line(color, 4);
+		var captionStyle = new CaptionStyle(color, '14px arial', color, 1);
+		frame.date.setMinutes(0);
+		frame.date.setSeconds(0, 0);
+		var hCoord;
+		for (var hour = 0; hour <= 24; hour++) {
+			frame.date.setHours(hour);
+			hCoord = cObj.getPositionInSky(frame);
+			path.addPoints(hCoord);
+			if (hour != 24){
+				var hourString = (hour >= 10 ? '' : '0') + hour + '00';
+				path.addCaptions(new Caption(hourString, hCoord, captionStyle));	
+			}
+		}
+		return path;
 	},
 	createCompass : function(){
 		var pi = Math.PI;
