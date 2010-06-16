@@ -63,7 +63,7 @@ astro = {
 	 * @param {Date} date
 	 */
 	getGeographicCoordOfSun : function(date){
-		var sun =  sunObj.getGeocentricCoords(date);
+		var sun =  astrodata.sun.getGeocentricCoords(date);
 		var lat = sun.dec;
 		var lon = astro.getLongitude(date, sun.ra);
 		return new GeographicCoord(lat, lon);
@@ -119,6 +119,7 @@ CelestialObject = function(params, properties){
 		M : params.M
 	}
 	this.properties = {
+		name :			properties.name,
 		isGeocentric : 	properties.isGeocentric,
 		color :			properties.color
 	}
@@ -172,7 +173,10 @@ CelestialObject = function(params, properties){
 		var d = astro.getDays(date) + 1.5;
 		var ecl = this.computeEcliptic(d);
 		if (!this.properties.isGeocentric){
-			//TODO add sun coords
+			var sunCoord = astrodata.sun.computeEcliptic(d);
+			ecl.x += sunCoord.x;
+			ecl.y += sunCoord.y;
+			ecl.z += sunCoord.z;
 		}
 		//rotate about the axial tilt of earth
 		var oblecl = degToRad(23.4393 - 3.563E-7 * d);
