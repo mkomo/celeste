@@ -798,14 +798,16 @@ HorizontalCoord = function(az, al){
 	};
 };
 
-EquatorialCoord = function(ra, dec){
-	this.ra = ra;//alpha
-	this.dec = dec;//delta
+EquatorialCoord = function(lat, lon){
+	this.ra = MathExt.translatePeriodic(degToHours(lon), 0, 24);//alpha
+	this.dec = lat;//delta
 	this.toString = function(){
-		var d = Math.floor(this.dec);
-		var m = Math.floor(60* (this.dec-d));
-		var s = Math.floor(60* (60*(this.dec-d)-m));
-		var decStr = d + '_deg ' + m + '\' ' + s + '"';
+		var absDec = Math.abs(this.dec);
+		var sgnDec = MathExt.sgn(this.dec);
+		var d = Math.floor(absDec);
+		var m = Math.floor(60* (absDec-d));
+		var s = Math.floor(60* (60*(absDec-d)-m));
+		var decStr = (sgnDec*d) + '_deg ' + m + '\' ' + s + '"';
 		var h = Math.floor(this.ra);
 		var m = Math.floor(60* (this.ra-h));
 		var s = Math.floor(60* (60*(this.ra-h)-m));
@@ -827,10 +829,14 @@ SphericalCoord = function(params){
 	this.lon = params.lon;
 	this.r = params.r;
 	this.toRect = function(){
+		var sinLat = Math.sin(degToRad(this.lat));
+		var cosLat = Math.cos(degToRad(this.lat));
+		var sinLon = Math.sin(degToRad(this.lon));
+		var cosLon = Math.cos(degToRad(this.lon));
 		return new RectangularCoord({
-			x : this.r * Math.cos(this.lat) * Math.cos(this.lon),
-			y : this.r * Math.cos(this.lat) * Math.sin(this.lon),
-			z : this.r * Math.sin(this.lat)
+			x : this.r * cosLat * cosLon,
+			y : this.r * cosLat * sinLon,
+			z : this.r * sinLat
 		});
 	};
 	this.toString = function(){
@@ -874,7 +880,7 @@ RectangularCoord = function(params){
 		});
 	};
 	this.toString = function(){
-		return '(' + x.toFixed(12) + ',' + y.toFixed(12) + ',' + z.toFixed(12) + ')';
+		return '(' + this.x.toFixed(6) + ',' + this.y.toFixed(6) + ',' + this.z.toFixed(6) + ')';
 	};
 }
 Pixel = function(x,y){
