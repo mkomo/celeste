@@ -141,11 +141,9 @@ CelestialObject = function(params){
 	if (typeof params.perturb === 'function'){
 		this.perturb = params.perturb;
 	}
-	
-	this.compute = function(date){
-		var d = astro.getDays(date) + 1.5;
+	this.getParams = function(d){
 		var degs = ['N','i','w','M'];
-		var params = mkutil.mapObject(this.params, function(value, key){
+		return mkutil.mapObject(this.params, function(value, key){
 			var x = value[0];
 			if (value.length === 2){
 				x += value[1]*d;
@@ -156,6 +154,10 @@ CelestialObject = function(params){
 			}
 			return x;
 		});
+	};
+	this.compute = function(date){
+		var d = astro.getDays(date) + 1.5;
+		var params = this.getParams(d)
 
 		// Calculate eccentric anomaly
 		var E = radToDeg(astro.getEccentricAnomaly(degToRad(params.M), params.e, 0.0001));
@@ -178,14 +180,15 @@ CelestialObject = function(params){
 		//compute perturbations 
 		if (typeof this.perturb === "function") {
 			var eclCoord = c.toSpherical();
-			eclCoord = this.perturb(eclCoord, d);
+			eclCoord = this.perturb(params, eclCoord, d);
 			c = eclCoord.toRect();
 		}
+		
 		//rotate about the axial tilt of earth
 		var oblecl = degToRad(23.4393 - 3.563E-7 * d);
 		var c_eq = c.rotateX(oblecl).toSpherical();
 		
-		return new EquatorialCoord(degToHours(c_eq.lon), c_eq.lat);
+		return new EquatorialCoord(c_eq.lat, c_eq.lon);
 	};
 }
 sunObj = new CelestialObject({
@@ -201,11 +204,53 @@ moonObj = new CelestialObject({
     N: [125.1228, -0.0529538083],
     i: [  5.1454],
     w: [318.0634, 0.1643573223],
-    a: [ 60.2666],
+    a: [ 60.2666],//units = earth radii
     e: [0.054900],
     M: [115.3654, 13.0649929509], 
-	perturb: function(eclCoord, d){
-		$.log(eclCoord, true);
+	perturb: function(moon, eclCoord, d){
+		var sun = sunObj.getParams(d);
+		
+		var Ls = degToRad(sun.N + sun.w + sun.M);//Sun's  mean longitude
+		var Lm = degToRad(moon.N + moon.w + moon.M);//Moon's mean longitude
+		var Ms = degToRad(sun.M);//Sun's  mean anomaly
+		var Mm = degToRad(moon.M);//Moon's mean anomaly
+		var D = Lm - Ls;//Moon's mean elongation
+		var F = Lm - degToRad(moon.N);//Moon's argument of latitude
+		var sum = function(acc, val){
+			return acc+val;
+		}
+		//Perturbations in longitude (degrees):
+		var lonPert = 
+			[-1.274 * Math.sin(Mm - 2*D),    //(Evection)
+			  0.658 * Math.sin(2*D),         //(Variation)
+			 -0.186 * Math.sin(Ms),          //(Yearly equation)
+			 -0.059 * Math.sin(2*Mm - 2*D),
+			 -0.057 * Math.sin(Mm - 2*D + Ms),
+			  0.053 * Math.sin(Mm + 2*D),
+			  0.046 * Math.sin(2*D - Ms),
+			  0.041 * Math.sin(Mm - Ms),
+			 -0.035 * Math.sin(D),            //(Parallactic equation)
+			 -0.031 * Math.sin(Mm + Ms),
+			 -0.015 * Math.sin(2*F - 2*D),
+			  0.011 * Math.sin(Mm - 4*D)].reduce(sum, 0);
+		  
+		//Perturbations in latitude (degrees):
+		var latPert = 
+			[-0.173 * Math.sin(F - 2*D),
+			 -0.055 * Math.sin(Mm - F - 2*D),
+			 -0.046 * Math.sin(Mm + F - 2*D),
+			  0.033 * Math.sin(F + 2*D),
+			  0.017 * Math.sin(2*Mm + F)].reduce(sum, 0);
+			  
+		//Perturbations in lunar distance (Earth radii):
+		var radPert = 
+			[-0.58 * Math.cos(Mm - 2*D),
+			 -0.46 * Math.cos(2*D)].reduce(sum, 0);
+			 
+		eclCoord.lat = eclCoord.lat + latPert;
+		eclCoord.lon = eclCoord.lon + lonPert;
+		eclCoord.r = eclCoord.r + radPert;
+		
 		return eclCoord;
 	}
 });
