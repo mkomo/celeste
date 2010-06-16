@@ -63,7 +63,7 @@ astro = {
 	 * @param {Date} date
 	 */
 	getGeographicCoordOfSun : function(date){
-		var sun =  sunObj.compute(date);
+		var sun =  sunObj.getGeocentricCoords(date);
 		var lat = sun.dec;
 		var lon = astro.getLongitude(date, sun.ra);
 		return new GeographicCoord(lat, lon);
@@ -112,7 +112,7 @@ FrameOfReference = function(date, lat, lon){
 	}
 }
 
-CelestialObject = function(params){
+CelestialObject = function(params, properties){
 	this.params = {
 		//    N  (usually written as "Capital Omega") Longitude of Ascending
 		//       Node. This is the angle, along the ecliptic, from the Vernal
@@ -138,6 +138,10 @@ CelestialObject = function(params){
 		//       Mean Anomaly is 0 at perihelion and 180 degrees at aphelion
 		M : params.M
 	}
+	this.properties = {
+		isGeocentric : 	properties.isGeocentric,
+		color :			properties.color
+	}
 	if (typeof params.perturb === 'function'){
 		this.perturb = params.perturb;
 	}
@@ -155,8 +159,7 @@ CelestialObject = function(params){
 			return x;
 		});
 	};
-	this.compute = function(date){
-		var d = astro.getDays(date) + 1.5;
+	this.computeEcliptic = function(d){
 		var params = this.getParams(d)
 
 		// Calculate eccentric anomaly
@@ -183,12 +186,25 @@ CelestialObject = function(params){
 			eclCoord = this.perturb(params, eclCoord, d);
 			c = eclCoord.toRect();
 		}
-		
+		return c;
+	};
+	this.getGeocentricCoords = function(date){
+		var d = astro.getDays(date) + 1.5;
+		var ecl = this.computeEcliptic(d);
+		if (!this.properties.isGeocentric){
+			//TODO add sun coords
+		}
 		//rotate about the axial tilt of earth
 		var oblecl = degToRad(23.4393 - 3.563E-7 * d);
-		var c_eq = c.rotateX(oblecl).toSpherical();
+		var c_eq = ecl.rotateX(oblecl).toSpherical();
 		//TODO topocentric
 		return new EquatorialCoord(c_eq.lat, c_eq.lon);
+	};
+	this.getPositionInSky = function(frame){
+		return frame.getHorizontalFromEquatorial(this.getGeocentricCoords(frame.date));
+	};
+	this.getAngularDiameter = function(){
+		return 32/60 * Math.PI/180;
 	};
 }
 sunObj = new CelestialObject({
@@ -198,6 +214,10 @@ sunObj = new CelestialObject({
     a: [1.000000],
     e: [0.016709, -1.151e-9],
     M: [356.0470, 0.9856002585]
+},{
+	name : 'sun',
+	isGeocentric : true,
+	color : '#ff0'
 });
 
 moonObj = new CelestialObject({
@@ -254,6 +274,9 @@ moonObj = new CelestialObject({
 		
 		return eclCoord;
 	}
+},{
+	isGeocentric : true,
+	color : '#fff'
 });
 planets = {
 	mercury : new CelestialObject({
@@ -263,6 +286,8 @@ planets = {
 	    a : [0.387098],
 	    e : [0.205635, 5.59E-10],
 	    M : [168.6562, 4.0923344368]
+	},{
+		isGeocentric : false
 	}),
 	venus : new CelestialObject({
 	    N : [ 76.6799, 2.46590E-5],
@@ -271,6 +296,8 @@ planets = {
 	    a : [0.723330],
 	    e : [0.006773, 1.302E-9],
 	    M : [ 48.0052, 1.6021302244]
+	},{
+		isGeocentric : false
 	}),
 	mars : new CelestialObject({
 	    N : [ 49.5574, 2.11081E-5],
@@ -279,6 +306,8 @@ planets = {
 	    a : [1.523688],
 	    e : [0.093405, 2.516E-9],
 	    M : [ 18.6021, 0.5240207766]
+	},{
+		isGeocentric : false
 	}),
 	jupiter : new CelestialObject({
 	    N : [100.4542, 2.76854E-5],
@@ -308,6 +337,8 @@ planets = {
 			
 			return eclCoord;
 		}
+	},{
+		isGeocentric : false
 	}),
 	saturn : new CelestialObject({
 	    N : [113.6634, 2.38980E-5],
@@ -340,6 +371,8 @@ planets = {
 			
 			return eclCoord;
 		}
+	},{
+		isGeocentric : false
 	}),
 	uranus : new CelestialObject({
 	    N : [ 74.0005, 1.3978E-5],
@@ -369,6 +402,8 @@ planets = {
 			
 			return eclCoord;
 		}
+	},{
+		isGeocentric : false
 	}),
 	neptune : new CelestialObject({
 	    N : [131.7806, 3.0173E-5],
@@ -377,5 +412,7 @@ planets = {
 	    a : [30.05826, 3.313E-8],
 	    e : [0.008606, 2.15E-9],
 	    M : [260.2471, 0.005995147]
+	},{
+		isGeocentric : false
 	})
 };

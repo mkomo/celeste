@@ -103,46 +103,36 @@ ObjectFactory = {
 		return circles;
 	},
 	createSunPath : function(date, lat, lon){
-		var sunPath = ObjectFactory.line(debug ? "#ff0" : "rgba(255,255,0,0.6)", 4);
-
-		var tempDate = new Date(date.getTime()); 
-		var frame = new FrameOfReference(tempDate, lat, lon);
-		var hCoord = frame.getHorizontalFromEquatorial(sunObj.compute(date));
-		var angDiam = 32/60 * (Math.PI/180); //32 arcmin
-		sunPath.addChildren(ObjectFactory.point("rgba(255,255,0,1)", angDiam/2)
-				   .addPoints(hCoord));
-		var captionStyle = new CaptionStyle("#000", '16px arial', '#ff0', 1); 
-		frame.date.setMinutes(0);
-		frame.date.setSeconds(0,0);
-		for (var hour = 0; hour <= 24; hour++){
-			frame.date.setHours(hour);
-			hCoord = frame.getHorizontalFromEquatorial(sunObj.compute(frame.date));
-			sunPath.addPoints(hCoord);
-			var hourString = (hour >= 10 ? '' : '0') + hour + '00';
-			hour != 24 && sunPath.addCaptions(new Caption(hourString, hCoord, captionStyle));
-		}
-		return sunPath;
+		return ObjectFactory.createCelestialObject(sunObj, date, lat, lon, true);
 	},
 	createMoonPath : function(date, lat, lon){
-		var moonPath = ObjectFactory.line("rgba(255,255,255,0.6)", 4);
-
+		return ObjectFactory.createCelestialObject(moonObj, date, lat, lon, true);
+	},
+	createCelestialObject : function(cObj, date, lat, lon, withPath){
 		var tempDate = new Date(date.getTime()); 
 		var frame = new FrameOfReference(tempDate, lat, lon);
-		var hCoord = frame.getHorizontalFromEquatorial(moonObj.compute(date));
-		var angDiam = 32/60 * (Math.PI/180); //32 arcmin
-		moonPath.addChildren(ObjectFactory.point("rgba(255,255,255,1)", angDiam/2)
-				   .addPoints(hCoord));
-		var captionStyle = new CaptionStyle("#000", '16px arial', '#fff', 1); 
-		frame.date.setMinutes(0);
-		frame.date.setSeconds(0,0);
-		for (var hour = 0; hour <= 24; hour++){
-			frame.date.setHours(hour);
-			hCoord = frame.getHorizontalFromEquatorial(moonObj.compute(frame.date));
-			moonPath.addPoints(hCoord);
-			var hourString = (hour >= 10 ? '' : '0') + hour + '00';
-			hour != 24 && moonPath.addCaptions(new Caption(hourString, hCoord, captionStyle));
+		var hCoord = cObj.getPositionInSky(frame);
+		var angDiam = cObj.getAngularDiameter(date);
+		var color = cObj.properties.color;
+		var obj = ObjectFactory.point(color, angDiam/2);
+		obj.addPoints(hCoord);
+		if (withPath) {
+			var path = ObjectFactory.line(color, 4);
+			obj.addChildren(path);
+			var captionStyle = new CaptionStyle("#000", '16px arial', color, 1);
+			frame.date.setMinutes(0);
+			frame.date.setSeconds(0, 0);
+			for (var hour = 0; hour <= 24; hour++) {
+				frame.date.setHours(hour);
+				hCoord = hCoord = cObj.getPositionInSky(frame);
+				path.addPoints(hCoord);
+				if (hour != 24){
+					var hourString = (hour >= 10 ? '' : '0') + hour + '00';
+					path.addCaptions(new Caption(hourString, hCoord, captionStyle));	
+				}
+			}
 		}
-		return moonPath;
+		return obj;
 	},
 	createCompass : function(){
 		var pi = Math.PI;
