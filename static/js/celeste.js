@@ -785,7 +785,7 @@ CaptionStyle = function(textStyle, font, pointStyle, radius){
 };
 
 HorizontalCoord = function(az, al){
-	this.az = az;
+	this.az = MathExt.translateAngle(az, 0);
 	this.al = al;
 	this.toVector = function(){
 		return new Vector(
@@ -794,13 +794,14 @@ HorizontalCoord = function(az, al){
 				Math.sin(this.al));
 	};
 	this.toString = function(){
-		return '(' + this.az + ',' + this.al + ')';
+		return '(' + radToDeg(this.az).toFixed(4) + ',' + radToDeg(this.al).toFixed(4) + ')';
 	};
 };
 
-EquatorialCoord = function(lat, lon){
+EquatorialCoord = function(lat, lon, r){
 	this.ra = MathExt.translatePeriodic(degToHours(lon), 0, 24);//alpha
 	this.dec = lat;//delta
+	this.r = r;
 	this.toString = function(){
 		var absDec = Math.abs(this.dec);
 		var sgnDec = MathExt.sgn(this.dec);
