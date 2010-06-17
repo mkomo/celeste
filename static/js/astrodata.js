@@ -15,7 +15,7 @@ astrodata = {
 	    N: [125.1228, -0.0529538083],
 	    i: [  5.1454],
 	    w: [318.0634, 0.1643573223],
-	    a: [ 60.2666],//TODO change units to AU (instead of earth radii)
+	    a: [ 60.2666],
 	    e: [0.054900],
 	    M: [115.3654, 13.0649929509], 
 		perturb: function(moon, eclCoord, d){
@@ -68,6 +68,7 @@ astrodata = {
 	},{
 		name : 'moon',
 		isGeocentric : true,
+		isEarthRadii : true,
 		color : '#fff'
 	}),
 	planets : {
@@ -185,9 +186,6 @@ astrodata = {
 				var Ms = degToRad(saturn.M);//Saturn's  mean anomaly
 				var Mj = degToRad(jupiter.M);//Jupiter's mean anomaly
 				var Mu = degToRad(uranus.M);//Jupiter's mean anomaly
-				var sum = function(acc, val){
-					return acc+val;
-				}
 				//Perturbations in longitude (degrees):
 				var lonPert = MathExt.sum([
 				     0.040 * Math.sin(Ms - 2*Mu + degToRad(6)),

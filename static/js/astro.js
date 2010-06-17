@@ -118,11 +118,7 @@ CelestialObject = function(params, properties){
 		//       Mean Anomaly is 0 at perihelion and 180 degrees at aphelion
 		M : params.M
 	}
-	this.properties = {
-		name :			properties.name,
-		isGeocentric : 	properties.isGeocentric,
-		color :			properties.color
-	}
+	this.properties = properties;
 	if (typeof params.perturb === 'function'){
 		this.perturb = params.perturb;
 	}
@@ -181,11 +177,18 @@ CelestialObject = function(params, properties){
 		//rotate about the axial tilt of earth
 		var oblecl = degToRad(23.4393 - 3.563E-7 * d);
 		var c_eq = ecl.rotateX(oblecl).toSpherical();
-		//TODO topocentric
-		return new EquatorialCoord(c_eq.lat, c_eq.lon);
+		return new EquatorialCoord(c_eq.lat, c_eq.lon, c_eq.r);
 	};
 	this.getPositionInSky = function(frame){
-		return frame.getHorizontalFromEquatorial(this.getGeocentricCoords(frame.date));
+		var geocentricCoord = this.getGeocentricCoords(frame.date);
+		var hCoord = frame.getHorizontalFromEquatorial(geocentricCoord);
+		
+		//TODO topocentric - this is the poor man's solution. So we want more?
+		var r = geocentricCoord.r * (this.properties.isEarthRadii ? 1 : 23455); 
+		var parallax = Math.atan(1 / r);
+		hCoord.al -= parallax * Math.cos(hCoord.al);
+		
+		return hCoord; 
 	};
 	this.getAngularDiameter = function(){
 		return 32/60 * Math.PI/180;
