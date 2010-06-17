@@ -9,7 +9,8 @@ astrodata = {
 	},{
 		name : 'sun',
 		isGeocentric : true,
-		color : '#ff0'
+		color : '#ff0',
+		diameter : 1919.26
 	}),
 	moon : new CelestialObject({
 	    N: [125.1228, -0.0529538083],
@@ -69,7 +70,8 @@ astrodata = {
 		name : 'moon',
 		isGeocentric : true,
 		isEarthRadii : true,
-		color : '#fff'
+		color : '#fff',
+		diameter : 1873.7 * 60
 	}),
 	planets : {
 		mercury : new CelestialObject({
@@ -81,7 +83,8 @@ astrodata = {
 		    M : [168.6562, 4.0923344368]
 		},{
 			name : 'mercury',
-			isGeocentric : false
+			isGeocentric : false,
+			diameter : 6.74 
 		}),
 		venus : new CelestialObject({
 		    N : [ 76.6799, 2.46590E-5],
@@ -92,7 +95,8 @@ astrodata = {
 		    M : [ 48.0052, 1.6021302244]
 		},{
 			name : 'venus',
-			isGeocentric : false
+			isGeocentric : false,
+			diameter : 16.92
 		}),
 		mars : new CelestialObject({
 		    N : [ 49.5574, 2.11081E-5],
@@ -103,7 +107,8 @@ astrodata = {
 		    M : [ 18.6021, 0.5240207766]
 		},{
 			name : 'mars',
-			isGeocentric : false
+			isGeocentric : false,
+			diameter : 9.36
 		}),
 		jupiter : new CelestialObject({
 		    N : [100.4542, 2.76854E-5],
@@ -135,7 +140,8 @@ astrodata = {
 			}
 		},{
 			name : 'jupiter',
-			isGeocentric : false
+			isGeocentric : false,
+			diameter : 196.94
 		}),
 		saturn : new CelestialObject({
 		    N : [113.6634, 2.38980E-5],
@@ -170,7 +176,8 @@ astrodata = {
 			}
 		},{
 			name : 'saturn',
-			isGeocentric : false
+			isGeocentric : false,
+			diameter : 165.6
 		}),
 		uranus : new CelestialObject({
 		    N : [ 74.0005, 1.3978E-5],
@@ -199,7 +206,8 @@ astrodata = {
 			}
 		},{
 			name : 'uranus',
-			isGeocentric : false
+			isGeocentric : false,
+			diameter : 65.8
 		}),
 		neptune : new CelestialObject({
 		    N : [131.7806, 3.0173E-5],
@@ -210,7 +218,8 @@ astrodata = {
 		    M : [260.2471, 0.005995147]
 		},{
 			name : 'neptune',
-			isGeocentric : false
+			isGeocentric : false,
+			diameter : 62.2
 		})
 	}
 }

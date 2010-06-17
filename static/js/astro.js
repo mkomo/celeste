@@ -169,6 +169,7 @@ CelestialObject = function(params, properties){
 		var d = astro.getDays(date) + 1.5;
 		var ecl = this.computeEcliptic(d);
 		if (!this.properties.isGeocentric){
+			//TODO pass in or cache this to minimize cpu
 			var sunCoord = astrodata.sun.computeEcliptic(d);
 			ecl.x += sunCoord.x;
 			ecl.y += sunCoord.y;
@@ -190,7 +191,9 @@ CelestialObject = function(params, properties){
 		
 		return hCoord; 
 	};
-	this.getAngularDiameter = function(){
-		return 32/60 * Math.PI/180;
+	this.getAngularDiameter = function(date){
+		//TODO calculate and return this along with positionInSky to minimize cpu
+		var geocentricCoord = this.getGeocentricCoords(date);
+		return (this.properties.diameter / 3600) * Math.PI/180 / geocentricCoord.r;
 	};
 }
