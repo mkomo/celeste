@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  	<title>celeste</title>
+	<meta name="description" content=""/>
+	<meta name="keywords" content=""/>	
+    <script type="text/javascript" src="/static/js/jquery.notmin.js"></script>
+<script type="text/javascript">	
+	$(function(){//onReady
+		$(document).keydown(function(e){
+			var keyCode = (e.keyCode ? e.keyCode : e.which);
+			$('#key').text(keyCode + ' down');
+		}).keyup(function(e){
+			var keyCode = (e.keyCode ? e.keyCode : e.which);
+			$('#key').text(keyCode + ' up');
+		});
+		$('#go').click(function(){
+			var i = 0;
+			while (i < 10000){
+				$('#count').text(i);
+				i++;
+			}
+		});
+		
+	});
+</script>
+<style>
+.clock{
+	font-size: 30px; 
+	font-weight: bold; 
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	text-align: center;
+	width: 180px;
+}
+.clock a{
+	text-decoration: none;
+	color: #d5deed
+}
+.clock span{
+	width: 100px;
+}
+</style>
+</head>
+<body>
+<div>
+	<div id="model-container">
+		<div>
+			<span id="key"></span>
+		</div>
+		<a id="go" href="#">call while loop</a>
+		<span id="count"></span>
+	</div>
+</div>	
+<br/>	
+<br/>	
+<br/>
+<div class="clock">
+	<div><a href="#">&lt;</a><span>2010</span><a href="#">&gt;</a></div>
+	<div><a href="#">&lt;</a><span>6</span><a href="#">&gt;</a></div>
+	<div><a href="#">&lt;</a><span>6</span><a href="#">&gt;</a></div>
+	<div><a href="#">&lt;</a><span>11</span><a href="#">&gt;</a></div>
+	<div><a href="#">&lt;</a><span>57</span><a href="#">&gt;</a></div>
+	<div><a href="#">&lt;</a><span>26</span><a href="#">&gt;</a></div>
+</div>
+ </body>
+</html>
