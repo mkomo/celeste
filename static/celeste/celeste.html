@@ -18,17 +18,20 @@
 	$(function(){//onReady
 		var pane = new CanvasPane($('#canvas')[0]);
 		var sunMap = new SunMap($('#sun-map')[0]);
-		_viewer = new Viewer(pane, sunMap, Application.parseHash());
-		_keyboard = new Keyboard(_viewer);
+		var viewer = new Viewer(pane, sunMap, Application.parseHash());
+		var keyboard = new Keyboard(viewer);
 		$(document).keydown(function(e){
-			_keyboard.keyChange(e, true);
+			keyboard.keyChange(e, true);
 			if (debug){
-				_keyboard.keyboardResponse();
+				keyboard.keyboardResponse();
 			}
 		}).keyup(function(e){
-			_keyboard.keyChange(e, false);
+			keyboard.keyChange(e, false);
 		});
 		if (!debug){
+			var keyboardListener = function(){
+				keyboard.keyboardResponse();
+			}
 			setInterval(keyboardListener, 35);
 		}
 
@@ -36,37 +39,34 @@
 		$('#datepicker').datepicker({
 			changeMonth: true,
 			changeYear: true,
-			defaultDate: new Date(_viewer.getTime()),
+			defaultDate: new Date(viewer.getTime()),
             onSelect: function(dateText, inst){
             	var date = $(this).datepicker('getDate');
-            	_viewer.setDate(date);
+            	viewer.setDate(date);
             },
 			onChangeMonthYear: function(year, month, inst){
             	var date = $(this).datepicker('getDate');
             	date.setFullYear(year);
             	date.setMonth(month-1);
-            	_viewer.setDate(date);
+            	viewer.setDate(date);
             }
 		});
 		$('#now-link').click(function(){
-		 	_viewer.setTime((new Date()).getTime());
+		 	viewer.setTime((new Date()).getTime());
 			return false;	
 		});
 		$("#timeslider").slider({
 			range: "min",
-			value: _viewer.getMinutes(),
+			value: viewer.getMinutes(),
 			min: 0,
 			max: 1439,
 			slide: function(event, ui) {
-				_viewer.setMinutes(ui.value);
+				viewer.setMinutes(ui.value);
 			}
 		});
-		_viewer.notifyFrameOfReferenceListeners();
+		viewer.notifyFrameOfReferenceListeners();
 
 	});
-	function keyboardListener(){
-		_keyboard.keyboardResponse();
-	}
 </script>
 </head>
 <body>

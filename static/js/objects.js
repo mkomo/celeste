@@ -30,7 +30,7 @@ FieldObject = function(type, properties){
 		strokeStyle : null,
 		pointStyle : null
 	}
-	for (key in properties){
+	for (var key in properties){
 		this.properties[key] = properties[key];
 	}
 
