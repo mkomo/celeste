@@ -113,8 +113,7 @@ ObjectFactory = {
 		return circles;
 	},
 	createCelestialObject : function(cObj, date, lat, lon, withPath){
-		var tempDate = new Date(date.getTime()); 
-		var frame = new FrameOfReference(tempDate, lat, lon);
+		var frame = new FrameOfReference(date, lat, lon);
 		var hCoord = cObj.getPositionInSky(frame);
 		var angDiam = cObj.getAngularDiameter(date);
 		var color = cObj.properties.color;

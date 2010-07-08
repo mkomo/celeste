@@ -71,7 +71,7 @@ astro = {
 }
 
 FrameOfReference = function(date, lat, lon){
-	this.date = date;
+	this.date = new Date(date.getTime());
 	this.lat = lat;
 	this.lon = lon;
 	
