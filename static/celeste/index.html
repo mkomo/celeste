@@ -2,19 +2,19 @@
 <html>
 <head>
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-  	<title>celeste</title>
+	<title>celeste</title>
 	<meta name="description" content=""/>
 	<meta name="keywords" content=""/>
-    <link type="text/css" rel="stylesheet" href="/static/css/main.css" />
-	<link type="text/css" href="/static/js/datepicker/jquery-ui-1.8.1.custom.css" rel="stylesheet" />	
-    <script type="text/javascript" src="/static/js/jquery.notmin.js"></script>
-    <script type="text/javascript" src="/static/js/datepicker/jquery-ui-1.8.1.custom.min.js"></script>
-    <script type="text/javascript" src="/static/js/util.js"></script>
-    <script type="text/javascript" src="/static/js/objects.js"></script>
-    <script type="text/javascript" src="/static/js/astro.js"></script>
-    <script type="text/javascript" src="/static/js/astrodata.js"></script>
-    <script type="text/javascript" src="/static/js/celeste.js"></script>
-<script type="text/javascript">	
+	<link type="text/css" rel="stylesheet" href="./css/main.css" />
+	<link type="text/css" rel="stylesheet" href="./js/datepicker/jquery-ui-1.8.15.custom.css" />
+	<script type="text/javascript" src="./js/jquery-1.6.2.notmin.js"></script>
+	<script type="text/javascript" src="./js/datepicker/jquery-ui-1.8.15.custom.min.js"></script>
+	<script type="text/javascript" src="./js/util.js"></script>
+	<script type="text/javascript" src="./js/objects.js"></script>
+	<script type="text/javascript" src="./js/astro.js"></script>
+	<script type="text/javascript" src="./js/astrodata.js"></script>
+	<script type="text/javascript" src="./js/celeste.js"></script>
+<script type="text/javascript">
 	$(function(){//onReady
 		var pane = new CanvasPane($('#canvas')[0]);
 		var sunMap = new SunMap($('#sun-map')[0]);
@@ -40,20 +40,16 @@
 			changeMonth: true,
 			changeYear: true,
 			defaultDate: new Date(viewer.getTime()),
-            onSelect: function(dateText, inst){
-            	var date = $(this).datepicker('getDate');
-            	viewer.setDate(date);
-            },
 			onChangeMonthYear: function(year, month, inst){
-            	var date = $(this).datepicker('getDate');
-            	date.setFullYear(year);
-            	date.setMonth(month-1);
-            	viewer.setDate(date);
-            }
-		});
+				var date = $(this).datepicker('getDate');
+				date.setFullYear(year);
+				date.setMonth(month-1);
+				viewer.setDate(date);
+			}
+		});//*/
 		$('#now-link').click(function(){
 		 	viewer.setTime((new Date()).getTime());
-			return false;	
+			return false;
 		});
 		$("#timeslider").slider({
 			range: "min",
@@ -90,6 +86,6 @@
 		</div>
 	</div>
 	<div style="clear: both"></div>
-</div>	
+</div>
  </body>
 </html>

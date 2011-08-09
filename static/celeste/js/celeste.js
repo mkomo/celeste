@@ -26,14 +26,14 @@ Application  = {
 			return prev;
 		}, {});
 		return {
-			time: parseInt(hashProps.time, 10),
-			lat: parseFloat(hashProps.lat),
-			lon: parseFloat(hashProps.lon),
-			alt: parseFloat(hashProps.alt),
-			az: parseFloat(hashProps.az),
-			al: parseFloat(hashProps.al),
-			ro: parseFloat(hashProps.ro),
-			d: parseFloat(hashProps.d)
+			time: new Date().getTime(),//parseInt(hashProps.time, 10),
+			lat: 43,//parseFloat(hashProps.lat),
+			lon: -78,//parseFloat(hashProps.lon),
+			alt: 10,//parseFloat(hashProps.alt),
+			az: 1,//parseFloat(hashProps.az),
+			al: 1,//parseFloat(hashProps.al),
+			ro: 1,//parseFloat(hashProps.ro),
+			d: 1000//parseFloat(hashProps.d)
 		};
 	}
 };
@@ -50,17 +50,17 @@ Keyboard = function(viewer){
 	this.keyChange = function(e, isOn){
 		var keyCode = (e.keyCode ? e.keyCode : e.which);
 		switch (keyCode){
-			case 65: case 37: 
+			case 65: case 37: //a or <left>
 				this.keys.left=isOn; break; 
-			case 87: case 38: 
+			case 87: case 38: //w or <up>
 				this.keys.up=isOn; break;
-			case 68: case 39: 
+			case 68: case 39: //d or <right>
 				this.keys.right=isOn; break;
-			case 83: case 40: 
+			case 83: case 40: //s or <down>
 				this.keys.down=isOn; break;
-			case 71: 
+			case 71: //f
 				this.keys.closer=isOn; break;
-			case 70: 
+			case 70: //g
 				this.keys.farther=isOn; break;
 			case 82: 
 				this.keys.reset=isOn; break;

@@ -2,7 +2,7 @@ body{
 	font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
 }
 #canvas{
-	border: 1px solid #555;	
+	border: 1px solid #555;
 }
 #canvas-column{
 	float: left;
@@ -19,7 +19,7 @@ body{
 	position: absolute;
 	right: 10px;
 	bottom: 10px;
-	text-align: right;	
+	text-align: right;
 	padding: 4px;
 }
 #model-container{
@@ -30,7 +30,7 @@ body{
 #sun-map{
 	margin: 2px;
 	border: 1px solid #88F;
-	background: url("/static/img/sun-map-240.png")
+	background: url("../img/sun-map-240.png")
 }
 #date-and-time{
 	padding: 3px;
